@@ -8,7 +8,7 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
   
     try {
       const user = await User.findByPk(userId, {
-        attributes: ['id', 'username', 'email', 'role', 'full_name']
+        attributes: ['id', 'username', 'email', 'role', 'full_name', 'profile_pic'] // ✅ added
       });
   
       if (!user) {

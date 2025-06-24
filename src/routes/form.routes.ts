@@ -6,4 +6,4 @@ const router = Router();
 
 router.post('/generate', authenticateToken, createForm);
 
-export default router;
+export default router;   
