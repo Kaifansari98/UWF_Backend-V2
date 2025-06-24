@@ -1,16 +1,31 @@
 import { Request, Response } from 'express';
 import GeneratedForm from '../models/generatedForm.model';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import { Op } from 'sequelize';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5000/api';
 
 const generateFormId = async (region: string): Promise<string> => {
   const prefix = region.charAt(0).toUpperCase();
   const year = new Date().getFullYear();
-  const count = await GeneratedForm.count({ where: { region } });
+
+  // Only count forms created in the same year and region
+  const startOfYear = new Date(`${year}-01-01T00:00:00Z`);
+  const endOfYear = new Date(`${year}-12-31T23:59:59Z`);
+
+  const count = await GeneratedForm.count({
+    where: {
+      region,
+      created_on: {
+        [Op.between]: [startOfYear, endOfYear] 
+      }
+    }
+  });
+
   const number = (count + 1).toString().padStart(4, '0');
   return `${prefix}${year}${number}`;
 };
+
 
 export const createForm = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
