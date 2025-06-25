@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors'; // ✅ import cors
 import apiRouter from './routes';
+import path from "path";
 
 dotenv.config();
 
@@ -13,6 +14,9 @@ app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true,
 }));
+
+// Serve static files from the assets folder
+app.use("/assets", express.static(path.join(__dirname, "../assets")));
 
 app.use(express.json());
 
