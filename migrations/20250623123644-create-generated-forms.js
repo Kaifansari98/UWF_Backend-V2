@@ -30,10 +30,6 @@ module.exports = {
         type: Sequelize.ENUM('Jubail', 'Dammam', 'Maharashtra'),
         allowNull: false
       },
-      disbursement_amount: {
-        type: Sequelize.FLOAT,
-        allowNull: false
-      },
       form_link: {
         type: Sequelize.STRING,
         allowNull: false
@@ -51,8 +47,16 @@ module.exports = {
         allowNull: true,
         defaultValue: null
       },
-      createdAt: Sequelize.DATE,
-      updatedAt: Sequelize.DATE
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.fn('NOW')
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.fn('NOW')
+      }
     });
   },
 

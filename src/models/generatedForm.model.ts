@@ -1,8 +1,35 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../database/sequelize';
 import User from './user.model';
 
-class GeneratedForm extends Model {}
+interface GeneratedFormAttributes {
+  formId: string;
+  region: 'Jubail' | 'Dammam' | 'Maharashtra';
+  form_link: string;
+  status?: 'submitted' | 'pending' | 'disbursed' | 'rejected' | 'case closed';
+  created_on?: Date;
+  submitted_on?: Date | null;
+  creator_name: string;
+  creatorId?: number;
+}
+
+// If you allow some fields optional when creating:
+type GeneratedFormCreationAttributes = Optional<
+  GeneratedFormAttributes,
+  'status' | 'created_on' | 'submitted_on' | 'creatorId'
+>;
+
+class GeneratedForm extends Model<GeneratedFormAttributes, GeneratedFormCreationAttributes>
+  implements GeneratedFormAttributes {
+  public formId!: string;
+  public region!: 'Jubail' | 'Dammam' | 'Maharashtra';
+  public form_link!: string;
+  public status!: 'submitted' | 'pending' | 'disbursed' | 'rejected' | 'case closed' | undefined;
+  public created_on!: Date;
+  public submitted_on!: Date | null;
+  public creator_name!: string;
+  public creatorId?: number;
+}
 
 GeneratedForm.init(
   {
@@ -13,10 +40,6 @@ GeneratedForm.init(
     },
     region: {
       type: DataTypes.ENUM('Jubail', 'Dammam', 'Maharashtra'),
-      allowNull: false
-    },
-    disbursement_amount: {
-      type: DataTypes.FLOAT,
       allowNull: false
     },
     form_link: {
