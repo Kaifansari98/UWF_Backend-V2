@@ -3,7 +3,7 @@ import GeneratedForm from '../models/generatedForm.model';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { Op } from 'sequelize';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5000/api';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 const generateFormId = async (region: string): Promise<string> => {
   const prefix = region.charAt(0).toUpperCase();
@@ -33,7 +33,7 @@ export const createForm = async (req: AuthRequest, res: Response): Promise<void>
       const { region, disbursement_amount } = req.body;
   
       const formId = await generateFormId(region);
-      const form_link = `${BASE_URL}/${formId}`;
+      const form_link = `${FRONTEND_URL}/${formId}`;
   
       const form = await GeneratedForm.create({
         formId,
