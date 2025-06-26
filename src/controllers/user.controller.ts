@@ -7,7 +7,6 @@ import path from 'path';
 import dotenv from 'dotenv';
 dotenv.config();
 
-
 const API_URL = process.env.API_URL || "http://localhost:5000";
 
 export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<void> => {
