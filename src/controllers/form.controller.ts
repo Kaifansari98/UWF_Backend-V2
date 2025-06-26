@@ -26,11 +26,10 @@ const generateFormId = async (region: string): Promise<string> => {
   return `${prefix}${year}${number}`;
 };
 
-
 export const createForm = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const user = req.user;
-      const { region, disbursement_amount } = req.body;
+      const { region } = req.body;
   
       const formId = await generateFormId(region);
       const form_link = `${FRONTEND_URL}/${formId}`;
@@ -38,7 +37,6 @@ export const createForm = async (req: AuthRequest, res: Response): Promise<void>
       const form = await GeneratedForm.create({
         formId,
         region,
-        disbursement_amount,
         form_link,
         creatorId: user.id,
         creator_name: user.full_name  
@@ -48,5 +46,68 @@ export const createForm = async (req: AuthRequest, res: Response): Promise<void>
     } catch (err) {
       res.status(500).json({ message: 'Failed to create form', error: err });
     }
-  };
+};
+
+export const getAllGeneratedForms = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const forms = await GeneratedForm.findAll();
+    res.status(200).json({ forms });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch forms', error });
+  }
+};
+
+export const generateNewStudentForm = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user;
+    const { region } = req.body;
+
+    const formId = await generateFormId(region);
+    const form_link = `${FRONTEND_URL}/${formId}`;
+
+    const form = await GeneratedForm.create({
+      formId,
+      region,
+      form_link,
+      creatorId: user.id,
+      creator_name: user.full_name
+    });
+
+    res.status(201).json({ message: 'Form created for new student', form });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to create form', error: err });
+  }
+};
+
+export const generateFormForExistingStudent = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user;
+    const { oldFormId } = req.body;
+
+    const oldForm = await GeneratedForm.findOne({ where: { formId: oldFormId } });
+    if (!oldForm) {
+      res.status(404).json({ message: 'Original student/form not found' });
+      return;
+    }
+
+    const prefix = oldFormId.charAt(0);
+    const sequence = oldFormId.slice(-4); // get last 4 digits
+    const currentYear = new Date().getFullYear();
+    const newFormId = `${prefix}${currentYear}${sequence}`;
+    const form_link = `${FRONTEND_URL}/${newFormId}`;
+
+    const newForm = await GeneratedForm.create({
+      formId: newFormId,
+      region: oldForm.region,
+      form_link,
+      creatorId: user.id,
+      creator_name: user.full_name
+    });
+
+    res.status(201).json({ message: 'Form created for existing student', form: newForm });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to create form', error: err });
+  }
+};
+
   
