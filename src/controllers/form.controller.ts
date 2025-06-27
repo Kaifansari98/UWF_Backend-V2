@@ -110,4 +110,18 @@ export const generateFormForExistingStudent = async (req: AuthRequest, res: Resp
   }
 };
 
-  
+export const getFormStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { formId } = req.params;
+    const form = await GeneratedForm.findOne({ where: { formId } });
+
+    if (!form) {
+      res.status(404).json({ message: "Form not found" });
+      return;
+    }
+
+    res.status(200).json({ status: form.status });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to get form status", error });
+  }
+};
