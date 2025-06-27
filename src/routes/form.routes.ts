@@ -3,7 +3,8 @@ import {
   generateNewStudentForm,
   generateFormForExistingStudent,
   getAllGeneratedForms,
-  getFormStatus
+  getFormStatus,
+  getPendingForms
 } from '../controllers/form.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 
@@ -13,5 +14,6 @@ router.post('/generate/new', authenticateToken, generateNewStudentForm);
 router.post('/generate/existing', authenticateToken, generateFormForExistingStudent);
 router.get('/all', authenticateToken, getAllGeneratedForms);
 router.get('/status/:formId', getFormStatus);
+router.get('/pending', authenticateToken, getPendingForms);
 
 export default router;
