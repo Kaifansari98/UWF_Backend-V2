@@ -125,3 +125,15 @@ export const getFormStatus = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ message: "Failed to get form status", error });
   }
 };
+
+export const getPendingForms = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const pendingForms = await GeneratedForm.findAll({
+      where: { status: 'pending' }
+    });
+
+    res.status(200).json({ forms: pendingForms });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch pending forms', error });
+  }
+};
