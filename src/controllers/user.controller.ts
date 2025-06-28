@@ -50,12 +50,12 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
   
       const profile_pic = req.file ? `${API_URL}/assets/UserData/${req.file.originalname}` : null;
   
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // const hashedPassword = await bcrypt.hash(password, 10);
   
       const user = await User.create({
         username,
         full_name,
-        password: hashedPassword,
+        password,
         role,
         email,
         age,

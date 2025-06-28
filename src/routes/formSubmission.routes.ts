@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { submitForm } from '../controllers/formSubmission.controller';
+import { submitForm, getSubmittedFormSubmissions } from '../controllers/formSubmission.controller';
 import { uploadFormData } from '../middlewares/upload.middleware';
+import { authenticateToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -13,5 +14,7 @@ router.post(
     ]),
     submitForm
 );
+
+router.get('/submissions/submitted', authenticateToken, getSubmittedFormSubmissions);
 
 export default router;
