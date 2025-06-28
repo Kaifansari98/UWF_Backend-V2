@@ -4,7 +4,8 @@ import {
   generateFormForExistingStudent,
   getAllGeneratedForms,
   getFormStatus,
-  getPendingForms
+  getPendingForms,
+  deletePendingFormById
 } from '../controllers/form.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 
@@ -15,5 +16,6 @@ router.post('/generate/existing', authenticateToken, generateFormForExistingStud
 router.get('/all', authenticateToken, getAllGeneratedForms);
 router.get('/status/:formId', getFormStatus);
 router.get('/pending', authenticateToken, getPendingForms);
+router.delete('/delete', authenticateToken, deletePendingFormById);
 
 export default router;

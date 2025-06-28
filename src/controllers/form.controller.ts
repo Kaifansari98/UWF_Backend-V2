@@ -137,3 +137,32 @@ export const getPendingForms = async (_req: Request, res: Response): Promise<voi
     res.status(500).json({ message: 'Failed to fetch pending forms', error });
   }
 };
+
+export const deletePendingFormById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { formId } = req.body;
+
+    if (!formId) {
+      res.status(400).json({ message: 'formId is required' });
+      return;
+    }
+
+    const form = await GeneratedForm.findOne({ where: { formId } });
+
+    if (!form) {
+      res.status(404).json({ message: 'Form not found' });
+      return;
+    }
+
+    if (form.getDataValue('status') !== 'pending') {
+      res.status(400).json({ message: 'Only forms with pending status can be deleted' });
+      return;
+    }
+
+    await form.destroy();
+
+    res.status(200).json({ message: `Form ${formId} deleted successfully` });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete form', error });
+  }
+};
