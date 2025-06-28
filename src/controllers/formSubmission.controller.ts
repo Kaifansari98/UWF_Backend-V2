@@ -75,3 +75,25 @@ export const submitForm = async (req: Request, res: Response): Promise<void> => 
     });
   }
 };
+
+export const getSubmittedFormSubmissions = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const submissions = await FormSubmission.findAll({
+      include: [
+        {
+          model: GeneratedForm,
+          where: { status: 'submitted' }, // filter only 'submitted' forms
+          attributes: ['status', 'formId', 'region', 'creator_name', 'submitted_on'],
+        }
+      ]
+    });
+
+    res.status(200).json({ submissions });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to fetch submitted form submissions',
+      error
+    });
+  }
+};
+
