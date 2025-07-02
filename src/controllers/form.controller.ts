@@ -26,32 +26,10 @@ const generateFormId = async (region: string): Promise<string> => {
   return `${prefix}${year}${number}`;
 };
 
-export const createForm = async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-      const user = req.user;
-      const { region } = req.body;
-  
-      const formId = await generateFormId(region);
-      const form_link = `${FRONTEND_URL}/${formId}`;
-  
-      const form = await GeneratedForm.create({
-        formId,
-        region,
-        form_link,
-        creatorId: user.id,
-        creator_name: user.full_name  
-      });
-  
-      res.status(201).json({ message: 'Form created successfully', form });
-    } catch (err) {
-      res.status(500).json({ message: 'Failed to create form', error: err });
-    }
-};
-
 export const getAllGeneratedForms = async (_req: Request, res: Response): Promise<void> => {
   try {
     const forms = await GeneratedForm.findAll();
-    res.status(200).json({ forms });
+    res.status(200).json({ forms }); // student_name is included by default
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch forms', error });
   }
@@ -60,7 +38,12 @@ export const getAllGeneratedForms = async (_req: Request, res: Response): Promis
 export const generateNewStudentForm = async (req: AuthRequest, res: Response) => {
   try {
     const user = req.user;
-    const { region } = req.body;
+    const { region, name } = req.body;
+
+    if (!region || !name) {
+      res.status(400).json({ message: 'Both name and region are required' });
+      return;
+    }
 
     const formId = await generateFormId(region);
     const form_link = `${FRONTEND_URL}/${formId}`;
@@ -70,7 +53,8 @@ export const generateNewStudentForm = async (req: AuthRequest, res: Response) =>
       region,
       form_link,
       creatorId: user.id,
-      creator_name: user.full_name
+      creator_name: user.full_name,
+      student_name: name // ✅ Save name
     });
 
     res.status(201).json({ message: 'Form created for new student', form });
@@ -101,7 +85,8 @@ export const generateFormForExistingStudent = async (req: AuthRequest, res: Resp
       region: oldForm.region,
       form_link,
       creatorId: user.id,
-      creator_name: user.full_name
+      creator_name: user.full_name,
+      student_name: oldForm.student_name // ✅ copy name from old form
     });
 
     res.status(201).json({ message: 'Form created for existing student', form: newForm });
