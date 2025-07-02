@@ -26,6 +26,10 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
+      student_name: { // ✅ New field added here
+        type: Sequelize.STRING,
+        allowNull: false
+      },
       region: {
         type: Sequelize.ENUM('Jubail', 'Dammam', 'Maharashtra'),
         allowNull: false
