@@ -10,16 +10,40 @@ if (!fs.existsSync(formDataPath)) {
 }
 
 const formStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
+  destination: (req, file, cb) => {
+    console.log('✅ Destination confirmed for:', file.originalname);
     cb(null, formDataPath);
   },
   filename: (req: Request, file, cb) => {
-    const formId = req.params.formId;
-    const suffix = file.fieldname; // 'feesStructure', 'marksheet', 'signature'
+    let formId = req.params.formId;
+  
+    // Fallback for PUT routes like /submissions/edit/:formId
+    if (!formId && req.originalUrl.includes('/submissions/edit/')) {
+      const parts = req.originalUrl.split('/');
+      const index = parts.findIndex(part => part === 'edit');
+      if (index !== -1 && parts[index + 1]) {
+        formId = parts[index + 1];
+      }
+    }
+  
+    if (!formId) {
+      console.error('❌ formId is undefined. URL:', req.originalUrl);
+      return cb(new Error('Form ID not found in request'), '');
+    }
+  
+    const suffix = file.fieldname;
     const ext = path.extname(file.originalname);
     const filename = `${formId}${suffix}${ext}`;
+  
+    console.log('📂 Uploading file:', {
+      formId,
+      suffix,
+      ext,
+      finalFileName: filename
+    });
+  
     cb(null, filename);
-  }
+  }  
 });
 
 export const uploadFormData = multer({

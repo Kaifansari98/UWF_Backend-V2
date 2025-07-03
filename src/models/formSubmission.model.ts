@@ -34,6 +34,7 @@ FormSubmission.init(
     feesStructure: DataTypes.STRING,
     marksheet: DataTypes.STRING,
     signature: DataTypes.STRING,
+    parentApprovalLetter: DataTypes.STRING,
     bankAccountHolder: DataTypes.STRING,
     bankAccountNumber: DataTypes.STRING,
     ifscCode: DataTypes.STRING,

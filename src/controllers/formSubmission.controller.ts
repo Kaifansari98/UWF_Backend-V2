@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import FormSubmission from '../models/formSubmission.model';
 import GeneratedForm from '../models/generatedForm.model';
+import { Op } from 'sequelize';
+import fs from 'fs';
+import path from 'path';
 
 export const submitForm = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -27,6 +30,31 @@ export const submitForm = async (req: Request, res: Response): Promise<void> => 
     const feesStructure = files?.['feesStructure']?.[0]?.filename;
     const marksheet = files?.['marksheet']?.[0]?.filename;
     const signature = files?.['signature']?.[0]?.filename;
+    let parentApprovalLetter = files?.['parentApprovalLetter']?.[0]?.filename;
+
+    // ✅ Step 2: If no parentApprovalLetter uploaded, try to fetch from old form
+    if (!parentApprovalLetter) {
+      const prefix = formId.charAt(0);
+      const sequence = formId.slice(-4); // get last 4 digits
+
+      const previousForm = await GeneratedForm.findOne({
+        where: {
+          formId: {
+            [Op.like]: `${prefix}%${sequence}`
+          },
+          status: 'submitted'
+        },
+        order: [['created_on', 'DESC']]
+      });
+
+      if (previousForm) {
+        const previousSubmission = await FormSubmission.findOne({
+          where: { formId: previousForm.formId }
+        });
+
+        parentApprovalLetter = previousSubmission?.getDataValue('parentApprovalLetter') || '';
+      }
+    }
 
     const submission = await FormSubmission.create({
       formId,
@@ -48,6 +76,7 @@ export const submitForm = async (req: Request, res: Response): Promise<void> => 
       feesStructure,
       marksheet,
       signature,
+      parentApprovalLetter,
       bankAccountHolder,
       bankAccountNumber,
       ifscCode,
@@ -96,4 +125,161 @@ export const getSubmittedFormSubmissions = async (_req: Request, res: Response):
     });
   }
 };
+
+export const editFormSubmission = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { formId } = req.params;
+
+    const submission = await FormSubmission.findOne({ where: { formId } });
+    if (!submission) {
+      res.status(404).json({ message: 'Submission not found' });
+      return;
+    }
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    // Determine which files to update (delete old ones if needed)
+    const fileFields = ['feesStructure', 'marksheet', 'signature', 'parentApprovalLetter'];
+    const updatedFiles: Record<string, string | undefined> = {};
+
+    for (const field of fileFields) {
+      if (files?.[field]?.[0]) {
+        const newFileName = files[field][0].filename;
+        const oldFileName = submission.getDataValue(field);
+
+        // Only delete the old file if the new one has a different filename
+        if (oldFileName && oldFileName !== newFileName) {
+          const oldFilePath = path.join(__dirname, `../../assets/FormData/${oldFileName}`);
+          if (fs.existsSync(oldFilePath)) {
+            fs.unlinkSync(oldFilePath);
+          }
+        }
+
+        updatedFiles[field] = newFileName;
+      } else {
+        // No new file uploaded, retain the existing filename
+        updatedFiles[field] = submission.getDataValue(field);
+      }
+    }
+
+    // Update other fields from body
+    const {
+      firstName, fatherName, familyName, gender,
+      schoolName, studyMedium, class: className, academicYear,
+      parentName, mobile, alternateMobile, address, incomeSource,
+      reason, requested_amount,
+      bankAccountHolder, bankAccountNumber, ifscCode, bankName,
+      coordinatorName, coordinatorMobile,
+      form_accepted, form_disbursed, form_case_closed
+    } = req.body;
+
+    await submission.update({
+      firstName,
+      fatherName,
+      familyName,
+      gender,
+      schoolName,
+      studyMedium,
+      class: className,
+      academicYear,
+      parentName,
+      mobile,
+      alternateMobile,
+      address,
+      incomeSource,
+      reason,
+      requested_amount,
+      bankAccountHolder,
+      bankAccountNumber,
+      ifscCode,
+      bankName,
+      coordinatorName,
+      coordinatorMobile,
+      form_accepted,
+      form_disbursed,
+      form_case_closed,
+      ...updatedFiles
+    });
+
+    res.status(200).json({ message: 'Form submission updated successfully', submission });
+
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to update form submission',
+      error: (error as Error).message
+    });
+  }
+};
+
+export const deleteFormSubmission = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { formId } = req.body;
+
+    if (!formId) {
+      res.status(400).json({ message: "formId is required" });
+      return;
+    }
+
+    const submission = await FormSubmission.findOne({ where: { formId } });
+    if (!submission) {
+      res.status(404).json({ message: "Submission not found" });
+      return;
+    }
+
+    const form = await GeneratedForm.findOne({ where: { formId } });
+    if (!form) {
+      res.status(404).json({ message: "Generated form not found" });
+      return;
+    }
+
+    // Extract prefix & suffix
+    const suffix = formId.slice(-4);       // "0001"
+    const prefix = formId.charAt(0);       // "J"
+    const currentYear = parseInt(formId.slice(1, 5)); // 2026
+
+    // Check if any earlier year form exists with same suffix (indicating this is an existing student)
+    const existingForm = await GeneratedForm.findOne({
+      where: {
+        formId: {
+          [Op.like]: `${prefix}%${suffix}`
+        },
+        created_on: {
+          [Op.lt]: form.getDataValue('created_on')
+        }
+      }
+    });
+
+    const isExistingStudent = !!existingForm;
+
+    // Delete uploaded files
+    const fileFields = ['feesStructure', 'marksheet', 'signature', 'parentApprovalLetter'];
+    for (const field of fileFields) {
+      const fileName = submission.getDataValue(field);
+      const filePath = path.join(__dirname, `../../assets/FormData/${fileName}`);
+
+      // ❗ If this is an existing student, skip deleting parentApprovalLetter
+      if (isExistingStudent && field === 'parentApprovalLetter') continue;
+
+      if (fileName && fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    // Delete both entries
+    await submission.destroy();
+    await form.destroy();
+
+    res.status(200).json({
+      message: `Form ${formId} and its submission deleted successfully${isExistingStudent ? ', parentApprovalLetter retained' : ''}`
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to delete submission and form",
+      error: (error as Error).message
+    });
+  }
+};
+
+
 

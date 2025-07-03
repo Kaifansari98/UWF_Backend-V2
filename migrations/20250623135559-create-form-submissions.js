@@ -38,6 +38,7 @@ module.exports = {
       feesStructure: Sequelize.STRING,
       marksheet: Sequelize.STRING,
       signature: Sequelize.STRING,
+      parentApprovalLetter: Sequelize.STRING,
       bankAccountHolder: Sequelize.STRING,
       bankAccountNumber: Sequelize.STRING,
       ifscCode: Sequelize.STRING,
