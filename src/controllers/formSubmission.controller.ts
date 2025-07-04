@@ -280,6 +280,3 @@ export const deleteFormSubmission = async (req: Request, res: Response): Promise
     });
   }
 };
-
-
-
