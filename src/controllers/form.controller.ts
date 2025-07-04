@@ -105,7 +105,29 @@ export const getFormStatus = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    res.status(200).json({ status: form.status });
+    // Extract form suffix and prefix
+    const suffix = formId.slice(-4);
+    const prefix = formId.charAt(0);
+
+    // Find if an earlier form exists with the same suffix
+    const earlierForm = await GeneratedForm.findOne({
+      where: {
+        formId: {
+          [Op.like]: `${prefix}%${suffix}`
+        },
+        created_on: {
+          [Op.lt]: form.getDataValue('created_on')
+        }
+      }
+    });
+
+    const isNewStudent = !earlierForm;
+
+    res.status(200).json({
+      status: form.status,
+      isNewStudent
+    });
+
   } catch (error) {
     res.status(500).json({ message: "Failed to get form status", error });
   }
@@ -151,3 +173,4 @@ export const deletePendingFormById = async (req: Request, res: Response): Promis
     res.status(500).json({ message: 'Failed to delete form', error });
   }
 };
+ 
