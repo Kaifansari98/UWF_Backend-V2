@@ -358,3 +358,87 @@ export const getRejectedFormSubmissions = async (_req: Request, res: Response): 
     });
   }
 };
+
+export const acceptFormSubmission = async (req: Request, res: Response): Promise<void> => {
+  const { formId } = req.params;
+
+  try {
+    const form = await GeneratedForm.findOne({ where: { formId } });
+    if (!form) {
+      res.status(404).json({ message: "Generated form not found" });
+      return;
+    }
+
+    const submission = await FormSubmission.findOne({ where: { formId } });
+    if (!submission) {
+      res.status(404).json({ message: "Form submission not found" });
+      return;
+    }
+
+    // Update both tables
+    await form.update({ status: "accepted" });
+    await submission.update({ form_accepted: true });
+
+    res.status(200).json({ message: "Form marked as accepted" });
+  } catch (err) {
+    console.error("Error updating form acceptance:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const revertFormAcceptance = async (req: Request, res: Response): Promise<void> => {
+  const { formId } = req.params;
+
+  try {
+    const form = await GeneratedForm.findOne({ where: { formId } });
+    if (!form) {
+      res.status(404).json({ message: "Generated form not found" });
+      return;
+    }
+
+    const submission = await FormSubmission.findOne({ where: { formId } });
+    if (!submission) {
+      res.status(404).json({ message: "Form submission not found" });
+      return;
+    }
+
+    // Revert both tables
+    await form.update({ status: "submitted" });
+    await submission.update({ form_accepted: false });
+
+    res.status(200).json({ message: "Form acceptance reverted successfully" });
+  } catch (err) {
+    console.error("Error reverting form acceptance:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getAcceptedFormSubmissions = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const acceptedSubmissions = await FormSubmission.findAll({
+      include: [
+        {
+          model: GeneratedForm,
+          where: { status: "accepted" },
+          attributes: [
+            "formId",
+            "region",
+            "form_link",
+            "status",
+            "created_on",
+            "submitted_on",
+            "creator_name",
+            "student_name",
+          ]
+        }
+      ]
+    });
+
+    res.status(200).json({ acceptedSubmissions });
+  } catch (err) {
+    console.error("Error fetching accepted submissions:", err);
+    res.status(500).json({ message: "Failed to fetch accepted submissions" });
+  }
+};
+
+
