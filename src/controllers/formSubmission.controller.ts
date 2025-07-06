@@ -280,3 +280,81 @@ export const deleteFormSubmission = async (req: Request, res: Response): Promise
     });
   }
 };
+
+export const rejectFormSubmission = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { formId } = req.params;
+
+    const submission = await FormSubmission.findOne({ where: { formId } });
+    const form = await GeneratedForm.findOne({ where: { formId } });
+
+    if (!submission || !form) {
+      res.status(404).json({ message: "Form or submission not found" });
+      return;
+    }
+
+    await submission.update({ isRejected: true });
+    await form.update({ status: "rejected" });
+
+    res.status(200).json({ message: "Form marked as rejected" });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to reject form submission",
+      error: (error as Error).message
+    });
+  }
+};
+
+export const revertRejection = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { formId } = req.params;
+
+    const submission = await FormSubmission.findOne({ where: { formId } });
+    const form = await GeneratedForm.findOne({ where: { formId } });
+
+    if (!submission || !form) {
+      res.status(404).json({ message: "Form or submission not found" });
+      return;
+    }
+
+    await submission.update({ isRejected: false });
+    await form.update({ status: "submitted" });
+
+    res.status(200).json({ message: "Form rejection reverted successfully" });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to revert rejection",
+      error: (error as Error).message
+    });
+  }
+};
+
+export const getRejectedFormSubmissions = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const rejectedSubmissions = await FormSubmission.findAll({
+      include: [
+        {
+          model: GeneratedForm,
+          where: { status: 'rejected' },
+          attributes: [
+            'formId',
+            'region',
+            'form_link',
+            'status',
+            'created_on',
+            'submitted_on',
+            'creator_name',
+            'student_name',
+          ]
+        }
+      ]
+    });
+
+    res.status(200).json({ rejectedSubmissions });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to fetch rejected submissions',
+      error: (error as Error).message
+    });
+  }
+};
