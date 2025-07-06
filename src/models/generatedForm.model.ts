@@ -6,7 +6,7 @@ interface GeneratedFormAttributes {
   formId: string;
   region: 'Jubail' | 'Dammam' | 'Maharashtra';
   form_link: string;
-  status?: 'submitted' | 'pending' | 'disbursed' | 'rejected' | 'case closed';
+  status?: 'submitted' | 'pending' | 'disbursed' | 'rejected' | 'case closed' | 'accepted';
   created_on?: Date;
   submitted_on?: Date | null;
   creator_name: string;
@@ -24,7 +24,7 @@ class GeneratedForm extends Model<GeneratedFormAttributes, GeneratedFormCreation
   public formId!: string;
   public region!: 'Jubail' | 'Dammam' | 'Maharashtra';
   public form_link!: string;
-  public status!: 'submitted' | 'pending' | 'disbursed' | 'rejected' | 'case closed' | undefined;
+  public status!: 'submitted' | 'pending' | 'disbursed' | 'rejected' | 'case closed' | 'accepted' | undefined;
   public created_on!: Date;
   public submitted_on!: Date | null;
   public creator_name!: string;
@@ -38,13 +38,13 @@ GeneratedForm.init(
     region: { type: DataTypes.ENUM('Jubail', 'Dammam', 'Maharashtra'), allowNull: false },
     form_link: { type: DataTypes.STRING, allowNull: false },
     status: {
-      type: DataTypes.ENUM('submitted', 'pending', 'disbursed', 'rejected', 'case closed'),
+      type: DataTypes.ENUM('submitted', 'pending', 'disbursed', 'rejected', 'case closed', 'accepted'),
       defaultValue: 'pending'
     },
     created_on: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     creator_name: { type: DataTypes.STRING, allowNull: false },
     submitted_on: { type: DataTypes.DATE, allowNull: true, defaultValue: null },
-    student_name: { type: DataTypes.STRING, allowNull: false } // ✅ New field
+    student_name: { type: DataTypes.STRING, allowNull: false } 
   },
   {
     sequelize,

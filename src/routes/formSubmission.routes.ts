@@ -1,5 +1,16 @@
 import { Router } from 'express';
-import { submitForm, getSubmittedFormSubmissions, deleteFormSubmission, editFormSubmission, rejectFormSubmission, revertRejection, getRejectedFormSubmissions } from '../controllers/formSubmission.controller';
+import { 
+  submitForm,
+  getSubmittedFormSubmissions, 
+  deleteFormSubmission, 
+  editFormSubmission, 
+  rejectFormSubmission, 
+  revertRejection, 
+  getRejectedFormSubmissions, 
+  acceptFormSubmission,
+  revertFormAcceptance, 
+  getAcceptedFormSubmissions 
+} from '../controllers/formSubmission.controller';
 import { uploadFormData } from '../middlewares/upload.middleware';
 import { authenticateToken } from '../middlewares/auth.middleware';
 
@@ -49,5 +60,9 @@ router.get(
   authenticateToken,
   getRejectedFormSubmissions
 );
+
+router.put("/submissions/accept/:formId", authenticateToken, acceptFormSubmission);
+router.put("/submissions/revert-accept/:formId", authenticateToken, revertFormAcceptance);
+router.get("/submissions/accepted", authenticateToken, getAcceptedFormSubmissions);
 
 export default router;

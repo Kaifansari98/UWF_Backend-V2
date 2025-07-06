@@ -26,7 +26,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
-      student_name: { // ✅ New field added here
+      student_name: { 
         type: Sequelize.STRING,
         allowNull: false
       },
@@ -39,7 +39,7 @@ module.exports = {
         allowNull: false
       },
       status: {
-        type: Sequelize.ENUM('submitted', 'pending', 'disbursed', 'rejected', 'case closed'),
+        type: Sequelize.ENUM('submitted', 'pending', 'disbursed', 'rejected', 'case closed', 'accepted'),
         defaultValue: 'pending'
       },
       created_on: {
