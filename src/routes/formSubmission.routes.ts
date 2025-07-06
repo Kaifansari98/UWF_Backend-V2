@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { submitForm, getSubmittedFormSubmissions, deleteFormSubmission, editFormSubmission } from '../controllers/formSubmission.controller';
+import { submitForm, getSubmittedFormSubmissions, deleteFormSubmission, editFormSubmission, rejectFormSubmission, revertRejection, getRejectedFormSubmissions } from '../controllers/formSubmission.controller';
 import { uploadFormData } from '../middlewares/upload.middleware';
 import { authenticateToken } from '../middlewares/auth.middleware';
 
@@ -31,5 +31,23 @@ router.put(
 router.get('/submissions/submitted', authenticateToken, getSubmittedFormSubmissions);
 
 router.delete('/submissions/delete', authenticateToken, deleteFormSubmission);
+
+router.put(
+  '/submissions/reject/:formId',
+  authenticateToken,
+  rejectFormSubmission
+); 
+
+router.put(
+  '/submissions/revert-rejection/:formId',
+  authenticateToken,
+  revertRejection
+);
+
+router.get(
+  '/submissions/rejected',
+  authenticateToken,
+  getRejectedFormSubmissions
+);
 
 export default router;

@@ -56,7 +56,15 @@ FormSubmission.init(
     form_case_closed: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
-    }
+    },
+    isRejected: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    acceptedAmount: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },  
   },
   {
     sequelize,

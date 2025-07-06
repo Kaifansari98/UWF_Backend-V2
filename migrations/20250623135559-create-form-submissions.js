@@ -61,6 +61,14 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
       },
+      isRejected: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+      acceptedAmount: {
+        type: Sequelize.FLOAT,
+        allowNull: true,
+      },      
       createdAt: Sequelize.DATE,
       updatedAt: Sequelize.DATE,
     });
