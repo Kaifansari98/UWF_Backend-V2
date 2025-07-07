@@ -9,7 +9,10 @@ import {
   getRejectedFormSubmissions, 
   acceptFormSubmission,
   revertFormAcceptance, 
-  getAcceptedFormSubmissions 
+  getAcceptedFormSubmissions,
+  updateAcceptedAmount,
+  getPaymentInProgressForms,
+  revertTreasuryApproval
 } from '../controllers/formSubmission.controller';
 import { uploadFormData } from '../middlewares/upload.middleware';
 import { authenticateToken } from '../middlewares/auth.middleware';
@@ -64,5 +67,14 @@ router.get(
 router.put("/submissions/accept/:formId", authenticateToken, acceptFormSubmission);
 router.put("/submissions/revert-accept/:formId", authenticateToken, revertFormAcceptance);
 router.get("/submissions/accepted", authenticateToken, getAcceptedFormSubmissions);
+
+router.put(
+  "/submissions/accept/amount/:formId",
+  authenticateToken,
+  updateAcceptedAmount
+);
+
+router.get("/submissions/payment-in-progress", authenticateToken, getPaymentInProgressForms);
+router.put("/submissions/revert-treasury/:formId", authenticateToken, revertTreasuryApproval);
 
 export default router;
