@@ -5,6 +5,9 @@ import { Op } from 'sequelize';
 import fs from 'fs';
 import path from 'path';
 
+// Inside formSubmission.controller.ts
+import { getPaymentInProgressFormsService, updateAcceptedAmountService } from "../services/formSubmission.service";
+
 export const submitForm = async (req: Request, res: Response): Promise<void> => {
   try {
     const { formId } = req.params;
@@ -293,8 +296,15 @@ export const rejectFormSubmission = async (req: Request, res: Response): Promise
       return;
     }
 
-    await submission.update({ isRejected: true });
+    // Update form status to rejected
     await form.update({ status: "rejected" });
+
+    // ✅ Fixed this line
+    if (submission.getDataValue('form_accepted') === true) {
+      await submission.update({ isRejected: true, form_accepted: false });
+    } else {
+      await submission.update({ isRejected: true });
+    }
 
     res.status(200).json({ message: "Form marked as rejected" });
   } catch (error) {
@@ -416,6 +426,9 @@ export const revertFormAcceptance = async (req: Request, res: Response): Promise
 export const getAcceptedFormSubmissions = async (_req: Request, res: Response): Promise<void> => {
   try {
     const acceptedSubmissions = await FormSubmission.findAll({
+      where: {
+        acceptedAmount: null, // <-- Only include submissions where acceptedAmount is not set
+      },
       include: [
         {
           model: GeneratedForm,
@@ -429,9 +442,9 @@ export const getAcceptedFormSubmissions = async (_req: Request, res: Response): 
             "submitted_on",
             "creator_name",
             "student_name",
-          ]
-        }
-      ]
+          ],
+        },
+      ],
     });
 
     res.status(200).json({ acceptedSubmissions });
@@ -441,4 +454,71 @@ export const getAcceptedFormSubmissions = async (_req: Request, res: Response): 
   }
 };
 
+export const updateAcceptedAmount = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { formId } = req.params;
+    const { amount } = req.body;
 
+    const savedAmount = await updateAcceptedAmountService(formId, Number(amount));
+
+    res.status(200).json({
+      message: "Accepted amount updated successfully",
+      acceptedAmount: savedAmount,
+    });
+  } catch (error: any) {
+    console.error("Error updating accepted amount:", error);
+    res.status(400).json({ message: error.message || "Failed to update accepted amount" });
+  }
+};
+
+export const getPaymentInProgressForms = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const submissions = await getPaymentInProgressFormsService();
+    res.status(200).json({ paymentInProgress: submissions });
+  } catch (err) {
+    console.error("Error fetching payment in progress forms:", err);
+    res.status(500).json({ message: "Failed to fetch payment in progress forms" });
+  }
+};
+
+export const revertTreasuryApproval = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { formId } = req.params;
+
+  try {
+    const submission = await FormSubmission.findOne({
+      where: { formId },
+      include: [{ model: GeneratedForm, as: "GeneratedForm" }],
+    });
+
+    if (!submission) {
+      res.status(404).json({ message: "Submission not found" });
+      return;
+    }
+
+    // Reset acceptedAmount
+    (submission as any).acceptedAmount = null;
+    await submission.save();
+
+    const generatedForm = (submission as any).GeneratedForm;
+    if (generatedForm) {
+      generatedForm.status = "accepted";
+      await generatedForm.save();
+    }
+
+    res.status(200).json({
+      message: `Treasury approval reverted for ${formId}`,
+      data: {
+        formId,
+        status: "accepted",
+      },
+    });
+  } catch (error: any) {
+    console.error("Error reverting treasury approval:", error);
+    res.status(500).json({
+      message: error.message || "Failed to revert treasury approval",
+    });
+  }
+};
