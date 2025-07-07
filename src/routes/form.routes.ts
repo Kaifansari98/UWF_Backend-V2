@@ -5,7 +5,7 @@ import {
   getAllGeneratedForms,
   getFormStatus,
   getPendingForms,
-  deletePendingFormById
+  deletePendingFormById,
 } from '../controllers/form.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 

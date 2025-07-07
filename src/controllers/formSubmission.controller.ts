@@ -6,7 +6,13 @@ import fs from 'fs';
 import path from 'path';
 
 // Inside formSubmission.controller.ts
-import { getPaymentInProgressFormsService, updateAcceptedAmountService } from "../services/formSubmission.service";
+import 
+{ getPaymentInProgressFormsService,
+  updateAcceptedAmountService,
+  markFormAsDisbursedService, 
+  getDisbursedFormsService,
+  getAllDisbursedDataService
+} from "../services/formSubmission.service";
 
 export const submitForm = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -520,5 +526,181 @@ export const revertTreasuryApproval = async (
     res.status(500).json({
       message: error.message || "Failed to revert treasury approval",
     });
+  }
+};
+
+export const markFormAsDisbursed = async (req: Request, res: Response) => {
+  const { formId } = req.params;
+
+  try {
+    const result = await markFormAsDisbursedService(formId);
+    res.status(200).json({
+      message: `Form ${formId} marked as disbursed.`,
+      data: result,
+    });
+  } catch (error: any) {
+    console.error("Error updating form_disbursed:", error);
+    res.status(500).json({
+      message: error.message || "Failed to update disbursement status",
+    });
+  }
+};
+
+export const revertDisbursedForm = async (req: Request, res: Response): Promise<void> => {
+  const { formId } = req.params;
+
+  try {
+    const submission = await FormSubmission.findOne({
+      where: { formId },
+      include: [{ model: GeneratedForm }],
+    });
+
+    if (!submission) {
+      res.status(404).json({ message: "Submission not found" });
+      return;
+    }
+
+    if (!(submission as any).form_disbursed) {
+      res.status(400).json({ message: "Form is not marked as disbursed" });
+      return;
+    }
+
+    (submission as any).form_disbursed = false;
+    await submission.save();
+
+    res.status(200).json({
+      message: `Disbursement reverted for form ${formId}`,
+      data: {
+        formId,
+        form_disbursed: false,
+      },
+    });
+  } catch (error: any) {
+    console.error("Error reverting disbursement:", error);
+    res.status(500).json({
+      message: error.message || "Failed to revert disbursement",
+    });
+  }
+};
+
+export const getDisbursedForms = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const submissions = await getDisbursedFormsService();
+    res.status(200).json({ disbursedForms: submissions });
+  } catch (err) {
+    console.error("Error fetching disbursed forms:", err);
+    res.status(500).json({ message: "Failed to fetch disbursed forms" });
+  }
+};
+
+export const markRequestAsDisbursed = async (req: Request, res: Response): Promise<void> => {
+  const { formId } = req.params;
+
+  try {
+    const submission = await FormSubmission.findOne({
+      where: { formId },
+      include: [{ model: GeneratedForm }],
+    });
+
+    if (!submission) {
+      res.status(404).json({ message: "Form submission not found" });
+      return;
+    }
+
+    const { acceptedAmount, form_accepted, form_disbursed, isRejected } = submission as any;
+
+    if (!acceptedAmount || !form_accepted || !form_disbursed || isRejected) {
+      res.status(400).json({
+        message: "Cannot disburse form. Ensure all conditions are met:\n• Accepted amount present\n• Form accepted\n• Form disbursed\n• Not rejected",
+      });
+      return;
+    }
+
+    const generatedForm = await GeneratedForm.findOne({ where: { formId } });
+    if (!generatedForm) {
+      res.status(404).json({ message: "Generated form not found" });
+      return;
+    }
+
+    generatedForm.status = "disbursed";
+    await generatedForm.save();
+
+    res.status(200).json({
+      message: `Form ${formId} marked as disbursed`,
+      data: {
+        formId,
+        status: "disbursed",
+      },
+    });
+  } catch (error: any) {
+    console.error("Error disbursing form:", error);
+    res.status(500).json({ message: error.message || "Failed to update form status" });
+  }
+};
+
+export const revertDisbursementToAccepted = async (req: Request, res: Response): Promise<void> => {
+  const { formId } = req.params;
+
+  try {
+    // Fetch form submission with associated generated form
+    const submission = await FormSubmission.findOne({
+      where: { formId },
+      include: [{ model: GeneratedForm }],
+    });
+
+    if (!submission) {
+      res.status(404).json({ message: "Form submission not found" });
+      return;
+    }
+
+    const { acceptedAmount, form_accepted, form_disbursed, isRejected } = submission as any;
+
+    // Check required flags
+    if (!acceptedAmount || !form_accepted || !form_disbursed || isRejected) {
+      res.status(400).json({
+        message:
+          "Cannot revert disbursement. Make sure:\n• Accepted amount exists\n• Form is accepted\n• Form is marked as disbursed\n• Form is not rejected",
+      });
+      return;
+    }
+
+    // Ensure generated form exists
+    const generatedForm = (submission as any).GeneratedForm;
+    if (!generatedForm) {
+      res.status(404).json({ message: "Generated form not found" });
+      return;
+    }
+
+    if (generatedForm.status !== "disbursed") {
+      res.status(400).json({ message: "Form is not currently marked as disbursed." });
+      return;
+    }
+
+    // Revert to accepted
+    generatedForm.status = "accepted";
+    await generatedForm.save();
+
+    res.status(200).json({
+      message: `Form ${formId} status reverted to accepted.`,
+      data: {
+        formId,
+        status: "accepted",
+      },
+    });
+  } catch (error: any) {
+    console.error("Error reverting disbursement:", error);
+    res.status(500).json({
+      message: error.message || "Failed to revert disbursement status",
+    });
+  }
+};
+
+export const getAllDisbursedData = async (_req: Request, res: Response) => {
+  try {
+    const disbursedForms = await getAllDisbursedDataService();
+    res.status(200).json({ disbursedForms });
+  } catch (error: any) {
+    console.error("Error fetching disbursed data:", error);
+    res.status(500).json({ message: "Failed to fetch disbursed forms data" });
   }
 };

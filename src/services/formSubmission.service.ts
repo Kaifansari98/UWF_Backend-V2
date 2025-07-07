@@ -25,29 +25,113 @@ export const updateAcceptedAmountService = async (formId: string, amount: number
 };
 
 export const getPaymentInProgressFormsService = async () => {
-    return await FormSubmission.findAll({
-      where: {
-        acceptedAmount: {
-          [Op.not]: null,
-        },
+  return await FormSubmission.findAll({
+    where: {
+      acceptedAmount: {
+        [Op.not]: null,
       },
-      include: [
-        {
-          model: GeneratedForm,
-          where: {
-            status: "accepted",
-          },
-          attributes: [
-            "formId",
-            "region",
-            "form_link",
-            "status",
-            "created_on",
-            "submitted_on",
-            "creator_name",
-            "student_name",
-          ],
+      form_disbursed: false, // ✅ only fetch if not disbursed
+    },
+    include: [
+      {
+        model: GeneratedForm,
+        where: {
+          status: "accepted",
         },
-      ],
-    });
+        attributes: [
+          "formId",
+          "region",
+          "form_link",
+          "status",
+          "created_on",
+          "submitted_on",
+          "creator_name",
+          "student_name",
+        ],
+      },
+    ],
+  });
+};
+
+export const markFormAsDisbursedService = async (formId: string) => {
+  const submission = await FormSubmission.findOne({
+    where: {
+      formId,
+      acceptedAmount: { [Op.not]: null },
+      isRejected: false,
+    },
+    include: [
+      {
+        model: GeneratedForm,
+        as: "GeneratedForm",
+        where: { status: "accepted" },
+      },
+    ],
+  });
+
+  if (!submission) {
+    throw new Error("Eligible form not found or doesn't meet the conditions");
+  }
+
+  (submission as any).form_disbursed = true;
+  await submission.save();
+
+  return {
+    formId,
+    form_disbursed: true,
+  };
+};
+
+export const getDisbursedFormsService = async () => {
+  return await FormSubmission.findAll({
+    where: {
+      acceptedAmount: { [Op.not]: null },
+      form_disbursed: true,
+    },
+    include: [
+      {
+        model: GeneratedForm,
+        where: { status: "accepted" },
+        attributes: [
+          "formId",
+          "region",
+          "form_link",
+          "status",
+          "created_on",
+          "submitted_on",
+          "creator_name",
+          "student_name",
+        ],
+      },
+    ],
+  });
+};
+
+export const getAllDisbursedDataService = async () => {
+  return await FormSubmission.findAll({
+    where: {
+      acceptedAmount: { [Op.not]: null },
+      form_accepted: true,
+      form_disbursed: true,
+      isRejected: false,
+    },
+    include: [
+      {
+        model: GeneratedForm,
+        where: {
+          status: "disbursed",
+        },
+        attributes: [
+          "formId",
+          "region",
+          "form_link",
+          "status",
+          "created_on",
+          "submitted_on",
+          "creator_name",
+          "student_name",
+        ],
+      },
+    ],
+  });
 };

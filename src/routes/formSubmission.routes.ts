@@ -12,7 +12,13 @@ import {
   getAcceptedFormSubmissions,
   updateAcceptedAmount,
   getPaymentInProgressForms,
-  revertTreasuryApproval
+  revertTreasuryApproval,
+  markFormAsDisbursed,
+  revertDisbursedForm,
+  getDisbursedForms,
+  markRequestAsDisbursed,
+  revertDisbursementToAccepted,
+  getAllDisbursedData
 } from '../controllers/formSubmission.controller';
 import { uploadFormData } from '../middlewares/upload.middleware';
 import { authenticateToken } from '../middlewares/auth.middleware';
@@ -76,5 +82,13 @@ router.put(
 
 router.get("/submissions/payment-in-progress", authenticateToken, getPaymentInProgressForms);
 router.put("/submissions/revert-treasury/:formId", authenticateToken, revertTreasuryApproval);
+
+router.put("/submissions/disburse/:formId", markFormAsDisbursed);
+router.put("/submissions/revert-disbursement/:formId", revertDisbursedForm);
+
+router.get("/submissions/disbursed", getDisbursedForms);
+router.put("/submissions/disburseARequest/:formId", markRequestAsDisbursed);
+router.put("/submissions/revertDisbursementStatus/:formId", revertDisbursementToAccepted);
+router.get("/submissions/disbursed/all", authenticateToken, getAllDisbursedData);
 
 export default router;
