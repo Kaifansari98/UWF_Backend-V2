@@ -11,7 +11,8 @@ import
   updateAcceptedAmountService,
   markFormAsDisbursedService, 
   getDisbursedFormsService,
-  getAllDisbursedDataService
+  getAllDisbursedDataService,
+  getAllUniqueNewStudentSubmissions
 } from "../services/formSubmission.service";
 
 export const submitForm = async (req: Request, res: Response): Promise<void> => {
@@ -702,5 +703,15 @@ export const getAllDisbursedData = async (_req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error fetching disbursed data:", error);
     res.status(500).json({ message: "Failed to fetch disbursed forms data" });
+  }
+};
+
+export const getAllNewStudentSubmissions = async (_req: Request, res: Response) => {
+  try {
+    const submissions = await getAllUniqueNewStudentSubmissions();
+    res.status(200).json({ submissions });
+  } catch (error: any) {
+    console.error("Error fetching new student submissions:", error);
+    res.status(500).json({ message: "Failed to fetch new student submissions" });
   }
 };
