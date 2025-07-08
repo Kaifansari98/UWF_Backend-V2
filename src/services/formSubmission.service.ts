@@ -135,3 +135,40 @@ export const getAllDisbursedDataService = async () => {
     ],
   });
 };
+
+// Helper to extract region initial and suffix
+const parseFormId = (formId: string) => {
+  const regionInitial = formId.charAt(0); // e.g. "J"
+  const suffix = formId.slice(-4);        // e.g. "0001"
+  return { regionInitial, suffix };
+};
+
+export const getAllUniqueNewStudentSubmissions = async () => {
+  // Get all non-pending submissions with their generated form
+  const all = await FormSubmission.findAll({
+    include: [
+      {
+        model: GeneratedForm,
+        where: {
+          status: { [Op.ne]: "pending" },
+        },
+      },
+    ],
+  });
+
+  const seenKeys = new Set<string>();
+  const uniqueNewStudentForms: any[] = [];
+
+  for (const submission of all) {
+    const formId = (submission as any).formId;
+    const { regionInitial, suffix } = parseFormId(formId);
+    const key = `${regionInitial}-${suffix}`;
+  
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      uniqueNewStudentForms.push(submission);
+    }
+  }  
+
+  return uniqueNewStudentForms;
+};

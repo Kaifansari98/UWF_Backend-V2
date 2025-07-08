@@ -63,7 +63,7 @@ export const generateNewStudentForm = async (req: AuthRequest, res: Response) =>
   }
 };
 
-export const generateFormForExistingStudent = async (req: AuthRequest, res: Response) => {
+export const generateFormForExistingStudent = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = req.user;
     const { oldFormId } = req.body;

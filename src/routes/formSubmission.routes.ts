@@ -18,7 +18,8 @@ import {
   getDisbursedForms,
   markRequestAsDisbursed,
   revertDisbursementToAccepted,
-  getAllDisbursedData
+  getAllDisbursedData,
+  getAllNewStudentSubmissions
 } from '../controllers/formSubmission.controller';
 import { uploadFormData } from '../middlewares/upload.middleware';
 import { authenticateToken } from '../middlewares/auth.middleware';
@@ -90,5 +91,7 @@ router.get("/submissions/disbursed", getDisbursedForms);
 router.put("/submissions/disburseARequest/:formId", markRequestAsDisbursed);
 router.put("/submissions/revertDisbursementStatus/:formId", revertDisbursementToAccepted);
 router.get("/submissions/disbursed/all", authenticateToken, getAllDisbursedData);
+
+router.get("/submissions/new-students", authenticateToken, getAllNewStudentSubmissions);
 
 export default router;
