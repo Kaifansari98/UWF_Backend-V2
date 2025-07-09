@@ -22,7 +22,8 @@ import {
   getAllNewStudentSubmissions,
   markFormAsCaseClosed,
   getCaseClosedForms,
-  revertCaseClosed
+  revertCaseClosed,
+  getCaseClosedFormsCurrentYear
 } from '../controllers/formSubmission.controller';
 import { uploadFormData } from '../middlewares/upload.middleware';
 import { authenticateToken } from '../middlewares/auth.middleware';
@@ -99,6 +100,7 @@ router.get("/submissions/new-students", authenticateToken, getAllNewStudentSubmi
 
 router.put("/submissions/close-case/:formId", authenticateToken, markFormAsCaseClosed);
 router.get("/submissions/case-closed", authenticateToken, getCaseClosedForms);
+router.get("/submissions/case-closed/current-year", authenticateToken, getCaseClosedFormsCurrentYear);
 router.put("/submissions/revert-case-closed/:formId", revertCaseClosed);
 
 export default router;
