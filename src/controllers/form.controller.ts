@@ -79,7 +79,7 @@ export const generateFormForExistingStudent = async (req: AuthRequest, res: Resp
     const currentYear = new Date().getFullYear();
     const newFormId = `${prefix}${currentYear}${sequence}`;
     const form_link = `${FRONTEND_URL}/${newFormId}`;
-
+  
     const newForm = await GeneratedForm.create({
       formId: newFormId,
       region: oldForm.region,
