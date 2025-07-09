@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import FormSubmission from '../models/formSubmission.model';
 import GeneratedForm from '../models/generatedForm.model';
-import { Op } from 'sequelize';
+import { col, fn, literal, Op, where } from 'sequelize';
 import fs from 'fs';
 import path from 'path';
 
@@ -816,6 +816,37 @@ export const revertCaseClosed = async (req: Request, res: Response): Promise<voi
   } catch (error: any) {
     res.status(500).json({
       message: "Failed to revert case closed status",
+      error: error.message || error
+    });
+  }
+};
+
+export const getCaseClosedFormsCurrentYear = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const currentYear = new Date().getFullYear();
+
+    const forms = await FormSubmission.findAll({
+      where: { form_case_closed: true },
+      include: [
+        {
+          model: GeneratedForm,
+          where: {
+            status: "case closed",
+            submitted_on: {
+              [Op.and]: [
+                { [Op.ne]: null },
+                where(fn("EXTRACT", literal(`YEAR FROM "submitted_on"`)), currentYear)
+              ]
+            }
+          }
+        }
+      ]
+    });
+
+    res.status(200).json({ caseClosedForms: forms });
+  } catch (error: any) {
+    res.status(500).json({
+      message: "Failed to fetch case closed forms for current year",
       error: error.message || error
     });
   }
