@@ -19,7 +19,10 @@ import {
   markRequestAsDisbursed,
   revertDisbursementToAccepted,
   getAllDisbursedData,
-  getAllNewStudentSubmissions
+  getAllNewStudentSubmissions,
+  markFormAsCaseClosed,
+  getCaseClosedForms,
+  revertCaseClosed
 } from '../controllers/formSubmission.controller';
 import { uploadFormData } from '../middlewares/upload.middleware';
 import { authenticateToken } from '../middlewares/auth.middleware';
@@ -93,5 +96,9 @@ router.put("/submissions/revertDisbursementStatus/:formId", revertDisbursementTo
 router.get("/submissions/disbursed/all", authenticateToken, getAllDisbursedData);
 
 router.get("/submissions/new-students", authenticateToken, getAllNewStudentSubmissions);
+
+router.put("/submissions/close-case/:formId", authenticateToken, markFormAsCaseClosed);
+router.get("/submissions/case-closed", authenticateToken, getCaseClosedForms);
+router.put("/submissions/revert-case-closed/:formId", revertCaseClosed);
 
 export default router;

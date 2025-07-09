@@ -715,3 +715,108 @@ export const getAllNewStudentSubmissions = async (_req: Request, res: Response) 
     res.status(500).json({ message: "Failed to fetch new student submissions" });
   }
 };
+
+export const markFormAsCaseClosed = async (req: Request, res: Response): Promise<void> => {
+  const { formId } = req.params;
+
+  try {
+    const submission = await FormSubmission.findOne({ where: { formId } });
+    const generatedForm = await GeneratedForm.findOne({ where: { formId } });
+
+    if (!submission || !generatedForm) {
+      res.status(404).json({ message: "Form or submission not found" });
+      return;
+    }
+
+    const {
+      form_accepted,
+      form_disbursed,
+      isRejected,
+      acceptedAmount
+    } = submission as any;    
+
+    if (!form_accepted || !form_disbursed || isRejected || !acceptedAmount || acceptedAmount <= 0) {
+      res.status(400).json({
+        message: "Cannot close case. Make sure:\n• Form is accepted\n• Disbursed\n• Not rejected\n• Accepted amount is greater than 0"
+      });
+      return;
+    }
+
+    await submission.update({ form_case_closed: true });
+    await generatedForm.update({ status: "case closed" });
+
+    res.status(200).json({
+      message: `Form ${formId} marked as case closed.`,
+      data: {
+        formId,
+        status: "case closed",
+        form_case_closed: true
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      message: "Failed to mark form as case closed",
+      error: error.message || error
+    });
+  }
+};
+
+export const getCaseClosedForms = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const forms = await FormSubmission.findAll({
+      where: { form_case_closed: true },
+      include: [
+        {
+          model: GeneratedForm,
+          where: { status: "case closed" }
+        }
+      ]
+    });
+
+    res.status(200).json({ caseClosedForms: forms });
+  } catch (error: any) {
+    res.status(500).json({
+      message: "Failed to fetch case closed forms",
+      error: error.message || error
+    });
+  }
+};
+
+export const revertCaseClosed = async (req: Request, res: Response): Promise<void> => {
+  const { formId } = req.params;
+
+  try {
+    const submission = await FormSubmission.findOne({ where: { formId } });
+    const generatedForm = await GeneratedForm.findOne({ where: { formId } });
+
+    if (!submission || !generatedForm) {
+      res.status(404).json({ message: "Form or submission not found" });
+      return;
+    }
+
+    const { status } = generatedForm;
+
+    if (status !== "case closed") {
+      res.status(400).json({ message: "Form is not marked as case closed" });
+      return;
+    }
+
+    await submission.update({ form_case_closed: false });
+    await generatedForm.update({ status: "disbursed" });
+
+    res.status(200).json({
+      message: `Case closed reverted for form ${formId}`,
+      data: {
+        formId,
+        status: "disbursed",
+        form_case_closed: false
+      }
+    });
+
+  } catch (error: any) {
+    res.status(500).json({
+      message: "Failed to revert case closed status",
+      error: error.message || error
+    });
+  }
+};
