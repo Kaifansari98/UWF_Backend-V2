@@ -1,29 +1,37 @@
 import { Request, Response } from 'express';
 import GeneratedForm from '../models/generatedForm.model';
 import { AuthRequest } from '../middlewares/auth.middleware';
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-const generateFormId = async (region: string): Promise<string> => {
-  const prefix = region.charAt(0).toUpperCase();
-  const year = new Date().getFullYear();
+export const generateFormId = async (region: 'Jubail' | 'Dammam' | 'Maharashtra') => {
+  const regionInitial = region.charAt(0).toUpperCase();
+  const currentYear = new Date().getFullYear();
 
-  // Only count forms created in the same year and region
-  const startOfYear = new Date(`${year}-01-01T00:00:00Z`);
-  const endOfYear = new Date(`${year}-12-31T23:59:59Z`);
-
-  const count = await GeneratedForm.count({
+  // Find the max sequence for this region across all years
+  const latestForm = await GeneratedForm.findOne({
     where: {
-      region,
-      created_on: {
-        [Op.between]: [startOfYear, endOfYear] 
+      formId: {
+        [Op.like]: `${regionInitial}%`
       }
-    }
+    },
+    order: [['created_on', 'DESC']]
   });
 
-  const number = (count + 1).toString().padStart(4, '0');
-  return `${prefix}${year}${number}`;
+  let nextSequence = 1;
+
+  if (latestForm?.formId) {
+    // Extract the last 4 digits (sequence)
+    const lastSeq = parseInt(latestForm.formId.slice(-4));
+    if (!isNaN(lastSeq)) {
+      nextSequence = lastSeq + 1;
+    }
+  }
+
+  // Now build new formId with current year and next sequence
+  const newFormId = `${regionInitial}${currentYear}${String(nextSequence).padStart(4, '0')}`;
+  return newFormId;
 };
 
 export const getAllGeneratedForms = async (_req: Request, res: Response): Promise<void> => {
