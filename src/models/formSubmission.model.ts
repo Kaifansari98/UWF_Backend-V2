@@ -2,6 +2,7 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../database/sequelize';
 import GeneratedForm from './generatedForm.model';
+import AcknowledgementForm from './acknowledgementForm.model';
 
 class FormSubmission extends Model {}
 
@@ -74,5 +75,15 @@ FormSubmission.init(
 );
 
 FormSubmission.belongsTo(GeneratedForm, { foreignKey: 'formId', targetKey: 'formId' });
+
+FormSubmission.hasOne(AcknowledgementForm, {
+  foreignKey: "formId",
+  sourceKey: "formId",
+});
+
+AcknowledgementForm.belongsTo(FormSubmission, {
+  foreignKey: "formId",
+  targetKey: "formId",
+});
 
 export default FormSubmission;

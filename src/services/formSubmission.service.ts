@@ -1,7 +1,8 @@
 // src/services/formSubmission.service.ts
 import FormSubmission from "../models/formSubmission.model";
 import GeneratedForm from "../models/generatedForm.model";
-import { Op } from "sequelize";
+import AcknowledgementForm from "../models/acknowledgementForm.model";
+import { Op, literal } from "sequelize";
 
 export const updateAcceptedAmountService = async (formId: string, amount: number) => {
   if (!amount || isNaN(amount)) {
@@ -108,12 +109,24 @@ export const getDisbursedFormsService = async () => {
 };
 
 export const getAllDisbursedDataService = async () => {
+  // Step 1: Get all acknowledged formIds
+  const acknowledgedFormIds = await AcknowledgementForm.findAll({
+    attributes: ['formId'],
+    raw: true,
+  });
+
+  const excludedFormIds = acknowledgedFormIds.map((entry) => (entry as any).formId);
+
+  // Step 2: Return disbursed forms that are NOT in the above list
   return await FormSubmission.findAll({
     where: {
       acceptedAmount: { [Op.not]: null },
       form_accepted: true,
       form_disbursed: true,
       isRejected: false,
+      formId: {
+        [Op.notIn]: excludedFormIds.length ? excludedFormIds : [''], // avoids SQL error on empty array
+      },
     },
     include: [
       {

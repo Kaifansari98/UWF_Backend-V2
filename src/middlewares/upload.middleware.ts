@@ -72,4 +72,32 @@ const userStorage = multer.diskStorage({
   }
 });
 
+const acknowledgementPath = path.join(__dirname, '../../assets/Acknowledgment_Data');
+if (!fs.existsSync(acknowledgementPath)) {
+  fs.mkdirSync(acknowledgementPath, { recursive: true });
+}
+
+const acknowledgementStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, acknowledgementPath);
+  },
+  filename: (req, file, cb) => {
+    const { formId } = req.params;
+    const ext = path.extname(file.originalname);
+    cb(null, `${formId}Invoice${ext}`);
+  }
+});
+
+export const uploadAcknowledgement = multer({
+  storage: acknowledgementStorage,
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'));
+    }
+  }
+});
+
+
 export const uploadUserProfile = multer({ storage: userStorage });
