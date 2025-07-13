@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import FormSubmission from '../models/formSubmission.model';
 import GeneratedForm from '../models/generatedForm.model';
+import AcknowledgementForm from '../models/acknowledgementForm.model';
 import { col, fn, literal, Op, where } from 'sequelize';
 import fs from 'fs';
 import path from 'path';
@@ -768,7 +769,11 @@ export const getCaseClosedForms = async (_req: Request, res: Response): Promise<
       include: [
         {
           model: GeneratedForm,
-          where: { status: "case closed" }
+          where: { status: "case closed" },
+        },
+        {
+          model: AcknowledgementForm,
+          required: false
         }
       ]
     });
