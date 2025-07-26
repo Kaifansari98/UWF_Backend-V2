@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const form_controller_1 = require("../controllers/form.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const router = (0, express_1.Router)();
+router.post('/generate/new', auth_middleware_1.authenticateToken, form_controller_1.generateNewStudentForm);
+router.post('/generate/existing', auth_middleware_1.authenticateToken, form_controller_1.generateFormForExistingStudent);
+router.get('/all', auth_middleware_1.authenticateToken, form_controller_1.getAllGeneratedForms);
+router.get('/status/:formId', form_controller_1.getFormStatus);
+router.get('/pending', auth_middleware_1.authenticateToken, form_controller_1.getPendingForms);
+router.delete('/delete', auth_middleware_1.authenticateToken, form_controller_1.deletePendingFormById);
+exports.default = router;

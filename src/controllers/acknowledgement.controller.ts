@@ -29,7 +29,7 @@ export const generateAcknowledgementForm = async (req: Request, res: Response): 
       const { firstName, fatherName, familyName } = formSubmission as any;
       const student_name = `${firstName} ${fatherName} ${familyName}`.trim();
   
-      const form_link = `http://localhost:3000/acknowledgement-form/${formId}`;
+      const form_link = `https://unitedwelfarefoundation.com/acknowledgement-form/${formId}`;
   
       const newAckForm = await AcknowledgementForm.create({
         formId,
