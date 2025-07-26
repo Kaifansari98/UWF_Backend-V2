@@ -58,12 +58,17 @@ User.init(
     tableName: 'users',
     sequelize,
     hooks: {
-      beforeCreate: async (user: any) => {
-        if (user.password) {
-          user.password = await bcrypt.hash(user.password, 10);
-        }
+     beforeCreate: async (user: any) => {
+      if (user.password) {
+       user.password = await bcrypt.hash(user.password, 10);
       }
-    }
+     },
+     beforeUpdate: async (user: any) => {
+      if (user.changed('password')) {
+       user.password = await bcrypt.hash(user.password, 10);
+      }
+     }
+   }
   }
 );
 

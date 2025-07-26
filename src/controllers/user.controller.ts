@@ -112,26 +112,26 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
   ? `${API_URL}/assets/UserData/${req.file.originalname}`
   : user.profile_pic;
 
-    // Hash new password if provided
-    let hashedPassword = user.password;
-    if (password) {
-      hashedPassword = await bcrypt.hash(password, 10);
-    }
+    const updateData: any = {
+  username,
+  full_name,
+  role,
+  email,
+  age,
+  country,
+  state,
+  city,
+  pincode,
+  mobile_no,
+  profile_pic
+};
 
-    await user.update({
-      username,
-      full_name,
-      password: hashedPassword,
-      role,
-      email,
-      age,
-      country,
-      state,
-      city,
-      pincode,
-      mobile_no,
-      profile_pic
-    });
+if (password) {
+  updateData.password = password;
+}
+
+await user.update(updateData);
+
     
     res.status(200).json({
       message: 'User updated successfully',
