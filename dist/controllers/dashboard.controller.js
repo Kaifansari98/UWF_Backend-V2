@@ -16,141 +16,124 @@ exports.getDashboardStats = void 0;
 const sequelize_1 = require("sequelize");
 const generatedForm_model_1 = __importDefault(require("../models/generatedForm.model"));
 const formSubmission_model_1 = __importDefault(require("../models/formSubmission.model"));
+const createEmptySummary = () => ({
+    studentsAided: 0,
+    amountDisbursed: 0,
+    requestsReceived: 0,
+    requestAccepted: 0,
+    requestPending: 0,
+    requestRejected: 0,
+    casesDisbursed: 0,
+    casesClosed: 0,
+});
+const getFinancialYearStart = (date) => {
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+    return month >= 3 ? year : year - 1;
+};
+const getFinancialYearKey = (dateInput) => {
+    const date = new Date(dateInput);
+    const startYear = getFinancialYearStart(date);
+    return `${startYear}-${startYear + 1}`;
+};
+const getFinancialYearLabel = (financialYearKey) => {
+    const [startYear, endYear] = financialYearKey.split('-');
+    return `${startYear} to ${endYear}`;
+};
 const getDashboardStats = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
-        const currentYear = new Date().getFullYear();
-        const startOfYear = new Date(`${currentYear}-01-01T00:00:00Z`);
-        const endOfYear = new Date(`${currentYear}-12-31T23:59:59Z`);
-        // ✅ Reusable helper to count forms by status (multiple or single)
-        const countForms = (statuses, isCurrentYear) => __awaiter(void 0, void 0, void 0, function* () {
-            return yield generatedForm_model_1.default.count({
-                where: Object.assign({ status: { [sequelize_1.Op.in]: statuses } }, (isCurrentYear && {
-                    created_on: { [sequelize_1.Op.between]: [startOfYear, endOfYear] }
-                }))
-            });
-        });
-        // 1️⃣ Students aided (status = 'case closed')
-        const totalStudentsAided = yield countForms(['case closed'], false);
-        const currentYearStudentsAided = yield countForms(['case closed'], true);
-        // 2️⃣ Amount disbursed (from FormSubmission.acceptedAmount)
-        const allDisbursedSubmissions = yield formSubmission_model_1.default.findAll({
+        const generatedForms = (yield generatedForm_model_1.default.findAll({
+            attributes: ['formId', 'status', 'created_on'],
+            raw: true,
+        }));
+        const disbursedSubmissions = yield formSubmission_model_1.default.findAll({
             include: [
                 {
                     model: generatedForm_model_1.default,
-                    where: {
-                        status: { [sequelize_1.Op.in]: ['case closed', 'disbursed'] }
-                    },
-                    attributes: []
-                }
-            ],
-            attributes: [[(0, sequelize_1.fn)('SUM', (0, sequelize_1.col)('acceptedAmount')), 'total']],
-            raw: true
-        });
-        const currentYearDisbursedSubmissions = yield formSubmission_model_1.default.findAll({
-            include: [
-                {
-                    model: generatedForm_model_1.default,
-                    where: {
-                        status: { [sequelize_1.Op.in]: ['case closed', 'disbursed'] },
-                        created_on: { [sequelize_1.Op.between]: [startOfYear, endOfYear] }
-                    },
-                    attributes: []
-                }
-            ],
-            attributes: [[(0, sequelize_1.fn)('SUM', (0, sequelize_1.col)('acceptedAmount')), 'total']],
-            raw: true
-        });
-        const parseAmount = (res) => { var _a; return parseFloat(((_a = res[0]) === null || _a === void 0 ? void 0 : _a.total) || '0'); };
-        // 3️⃣ Requests received (status ≠ pending)
-        const validStatuses = ['submitted', 'disbursed', 'rejected', 'case closed', 'accepted'];
-        const totalRequests = yield countForms(validStatuses, false);
-        const currentYearRequests = yield countForms(validStatuses, true);
-        // 📗 Request Accepted (accepted/disbursed/case closed)
-        const requestAcceptedOverall = yield countForms(['accepted', 'disbursed', 'case closed'], false);
-        const requestAcceptedCurrentYear = yield countForms(['accepted', 'disbursed', 'case closed'], true);
-        // ⏳ Request Pending
-        const requestPendingOverall = yield countForms(['pending'], false);
-        const requestPendingCurrentYear = yield countForms(['pending'], true);
-        // ❌ Request Rejected
-        const requestRejectedOverall = yield countForms(['rejected'], false);
-        const requestRejectedCurrentYear = yield countForms(['rejected'], true);
-        // 💸 Cases Disbursed
-        const casesDisbursedOverall = yield countForms(['disbursed'], false);
-        const casesDisbursedCurrentYear = yield countForms(['disbursed'], true);
-        // 📁 Cases Closed
-        const casesClosedOverall = yield countForms(['case closed'], false);
-        const casesClosedCurrentYear = yield countForms(['case closed'], true);
-        // 📊 Year-wise: Students Aided
-        const studentsAidedPerYear = yield generatedForm_model_1.default.findAll({
-            where: {
-                status: { [sequelize_1.Op.in]: ['case closed', 'disbursed'] }
-            },
-            attributes: [
-                [(0, sequelize_1.literal)('EXTRACT(YEAR FROM "created_on")'), 'year'],
-                [(0, sequelize_1.fn)('COUNT', (0, sequelize_1.col)('formId')), 'students']
-            ],
-            group: ['year'],
-            order: [['year', 'ASC']],
-            raw: true
-        });
-        // 📊 Year-wise: Amount Disbursed
-        const amountDisbursedPerYear = yield formSubmission_model_1.default.findAll({
-            include: [
-                {
-                    model: generatedForm_model_1.default,
+                    attributes: ['created_on'],
                     where: { status: { [sequelize_1.Op.in]: ['case closed', 'disbursed'] } },
-                    attributes: []
-                }
+                },
             ],
-            attributes: [
-                [(0, sequelize_1.literal)('EXTRACT(YEAR FROM "GeneratedForm"."created_on")'), 'year'],
-                [(0, sequelize_1.fn)('SUM', (0, sequelize_1.col)('acceptedAmount')), 'amount']
-            ],
-            group: ['year'],
-            order: [['year', 'ASC']],
-            raw: true
+            attributes: ['acceptedAmount'],
+            raw: true,
+            nest: true,
         });
+        const financialYearMap = new Map();
+        const ensureSummary = (key) => {
+            if (!financialYearMap.has(key)) {
+                financialYearMap.set(key, createEmptySummary());
+            }
+            return financialYearMap.get(key);
+        };
+        const overall = createEmptySummary();
+        for (const form of generatedForms) {
+            const financialYearKey = getFinancialYearKey(form.created_on);
+            const summary = ensureSummary(financialYearKey);
+            const targets = [overall, summary];
+            for (const target of targets) {
+                target.requestsReceived += 1;
+                if (form.status === 'case closed') {
+                    target.studentsAided += 1;
+                    target.requestAccepted += 1;
+                    target.casesClosed += 1;
+                }
+                if (form.status === 'accepted') {
+                    target.requestAccepted += 1;
+                }
+                if (form.status === 'disbursed') {
+                    target.requestAccepted += 1;
+                    target.casesDisbursed += 1;
+                }
+                if (form.status === 'pending') {
+                    target.requestPending += 1;
+                }
+                if (form.status === 'rejected') {
+                    target.requestRejected += 1;
+                }
+            }
+        }
+        for (const submission of disbursedSubmissions) {
+            const createdOn = (_a = submission.GeneratedForm) === null || _a === void 0 ? void 0 : _a.created_on;
+            if (!createdOn)
+                continue;
+            const amount = Number(submission.acceptedAmount || 0);
+            const financialYearKey = getFinancialYearKey(createdOn);
+            const summary = ensureSummary(financialYearKey);
+            overall.amountDisbursed += amount;
+            summary.amountDisbursed += amount;
+        }
+        const financialYearKeys = [...financialYearMap.keys()].sort((a, b) => {
+            const [aStart] = a.split('-').map(Number);
+            const [bStart] = b.split('-').map(Number);
+            return aStart - bStart;
+        });
+        const financialYearOptions = financialYearKeys.map((key) => ({
+            key,
+            label: getFinancialYearLabel(key),
+        }));
         res.status(200).json({
-            studentsAided: {
-                overall: totalStudentsAided,
-                currentYear: currentYearStudentsAided
+            financialYearOptions: [...financialYearOptions, { key: 'overall', label: 'Overall' }],
+            summary: {
+                overall,
+                byFinancialYear: Object.fromEntries(financialYearMap.entries()),
             },
-            amountDisbursed: {
-                overall: parseAmount(allDisbursedSubmissions),
-                currentYear: parseAmount(currentYearDisbursedSubmissions)
-            },
-            requestsReceived: {
-                overall: totalRequests,
-                currentYear: currentYearRequests
-            },
-            requestAccepted: {
-                overall: requestAcceptedOverall,
-                currentYear: requestAcceptedCurrentYear
-            },
-            requestPending: {
-                overall: requestPendingOverall,
-                currentYear: requestPendingCurrentYear
-            },
-            requestRejected: {
-                overall: requestRejectedOverall,
-                currentYear: requestRejectedCurrentYear
-            },
-            casesDisbursed: {
-                overall: casesDisbursedOverall,
-                currentYear: casesDisbursedCurrentYear
-            },
-            casesClosed: {
-                overall: casesClosedOverall,
-                currentYear: casesClosedCurrentYear
-            },
-            studentsAidedPerYear: studentsAidedPerYear.map((item) => ({
-                year: item.year,
-                students: parseInt(item.students)
-            })),
-            amountDisbursedPerYear: amountDisbursedPerYear.map((item) => ({
-                year: item.year,
-                amount: parseFloat(item.amount)
-            }))
+            studentsAidedPerFinancialYear: financialYearKeys.map((key) => {
+                var _a, _b;
+                return ({
+                    key,
+                    label: getFinancialYearLabel(key),
+                    students: (_b = (_a = financialYearMap.get(key)) === null || _a === void 0 ? void 0 : _a.studentsAided) !== null && _b !== void 0 ? _b : 0,
+                });
+            }),
+            amountDisbursedPerFinancialYear: financialYearKeys.map((key) => {
+                var _a, _b;
+                return ({
+                    key,
+                    label: getFinancialYearLabel(key),
+                    amount: (_b = (_a = financialYearMap.get(key)) === null || _a === void 0 ? void 0 : _a.amountDisbursed) !== null && _b !== void 0 ? _b : 0,
+                });
+            }),
         });
     }
     catch (error) {
