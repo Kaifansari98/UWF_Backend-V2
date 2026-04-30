@@ -7,7 +7,8 @@ import path from "path";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const environment = process.env.ENVIRONMENT?.trim().toUpperCase();
+const PORT = environment === 'PRODUCTION' ? 5000 : 5001;
 
 const allowedOrigins = new Set(
   [
