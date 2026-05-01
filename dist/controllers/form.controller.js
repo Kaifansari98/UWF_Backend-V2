@@ -11,11 +11,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deletePendingFormById = exports.getPendingForms = exports.getFormStatus = exports.generateFormForExistingStudent = exports.generateNewStudentForm = exports.getAllGeneratedForms = exports.generateFormId = void 0;
 const generatedForm_model_1 = __importDefault(require("../models/generatedForm.model"));
 const sequelize_1 = require("sequelize");
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = ((_a = process.env.FRONTEND_URL) === null || _a === void 0 ? void 0 : _a.trim()) || 'http://localhost:3000';
 const generateFormId = (region) => __awaiter(void 0, void 0, void 0, function* () {
     const regionInitial = region.charAt(0).toUpperCase();
     const currentYear = new Date().getFullYear();

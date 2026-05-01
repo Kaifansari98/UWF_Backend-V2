@@ -7,10 +7,9 @@ import path from 'path';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const API_URL = process.env.API_URL || "http://localhost:5000";
+const API_URL = process.env.API_URL?.trim() || "http://localhost:5001";
 
 export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<void> => {
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
     const userId = req.user?.id;
   
     try {
@@ -30,9 +29,6 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
 };
 
 export const createUser = async (req: Request, res: Response): Promise<void> => {
-
-  const baseUrl = `${req.protocol}://${req.get("host")}`; // http://localhost:5000
-
     try {
       const {
         username,
@@ -83,7 +79,6 @@ export const getAllUsers = async (_req: Request, res: Response): Promise<void> =
 };
 
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
-  const baseUrl = `${req.protocol}://${req.get("host")}`;
   try {
     const { id } = req.params;
 
@@ -137,7 +132,7 @@ await user.update(updateData);
       message: 'User updated successfully',
       user: {
         ...user.toJSON(),
-        profile_pic: user.profile_pic ? `${baseUrl}${user.profile_pic}` : null
+        profile_pic: user.profile_pic
       }
     });
   } catch (error) {

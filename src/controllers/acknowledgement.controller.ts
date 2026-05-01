@@ -3,6 +3,8 @@ import AcknowledgementForm from '../models/acknowledgementForm.model';
 import GeneratedForm from '../models/generatedForm.model';
 import FormSubmission from '../models/formSubmission.model';
 
+const FRONTEND_URL = process.env.FRONTEND_URL?.trim() || 'http://localhost:3000';
+
 export const generateAcknowledgementForm = async (req: Request, res: Response): Promise<void> => {
     try {
       const { formId } = req.body;
@@ -29,7 +31,7 @@ export const generateAcknowledgementForm = async (req: Request, res: Response): 
       const { firstName, fatherName, familyName } = formSubmission as any;
       const student_name = `${firstName} ${fatherName} ${familyName}`.trim();
   
-      const form_link = `https://unitedwelfarefoundation.com/acknowledgement-form/${formId}`;
+      const form_link = `${FRONTEND_URL}/acknowledgement-form/${formId}`;
   
       const newAckForm = await AcknowledgementForm.create({
         formId,

@@ -9,14 +9,16 @@ dotenv.config();
 const app = express();
 const environment = process.env.ENVIRONMENT?.trim().toUpperCase();
 const PORT = environment === 'PRODUCTION' ? 5000 : 5001;
+const frontendUrl = process.env.FRONTEND_URL?.trim();
+const localFrontendUrls = (process.env.LOCAL_FRONTEND_URLS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 const allowedOrigins = new Set(
   [
-    process.env.FRONTEND_URL,
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3001',
+    frontendUrl,
+    ...localFrontendUrls,
   ].filter((origin): origin is string => Boolean(origin))
 );
 
@@ -50,5 +52,5 @@ app.get('/', (_req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running at ${process.env.API_URL || `http://localhost:${PORT}`}`);
 });

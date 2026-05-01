@@ -11,11 +11,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.revertAcknowledgementAcceptance = exports.markAcknowledgementFormAsAccepted = exports.getAllAcceptedAcknowledgementForms = exports.getAllSubmittedAcknowledgementForms = exports.getAllPendingAcknowledgementForms = exports.getCompleteStudentData = exports.uploadAcknowledgementInvoice = exports.generateAcknowledgementForm = void 0;
 const acknowledgementForm_model_1 = __importDefault(require("../models/acknowledgementForm.model"));
 const generatedForm_model_1 = __importDefault(require("../models/generatedForm.model"));
 const formSubmission_model_1 = __importDefault(require("../models/formSubmission.model"));
+const FRONTEND_URL = ((_a = process.env.FRONTEND_URL) === null || _a === void 0 ? void 0 : _a.trim()) || 'http://localhost:3000';
 const generateAcknowledgementForm = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { formId } = req.body;
@@ -35,7 +37,7 @@ const generateAcknowledgementForm = (req, res) => __awaiter(void 0, void 0, void
         }
         const { firstName, fatherName, familyName } = formSubmission;
         const student_name = `${firstName} ${fatherName} ${familyName}`.trim();
-        const form_link = `https://unitedwelfarefoundation.com/acknowledgement-form/${formId}`;
+        const form_link = `${FRONTEND_URL}/acknowledgement-form/${formId}`;
         const newAckForm = yield acknowledgementForm_model_1.default.create({
             formId,
             student_name,

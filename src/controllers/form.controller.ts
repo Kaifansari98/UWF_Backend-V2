@@ -3,7 +3,7 @@ import GeneratedForm from '../models/generatedForm.model';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { Op, Sequelize } from 'sequelize';
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = process.env.FRONTEND_URL?.trim() || 'http://localhost:3000';
 
 export const generateFormId = async (region: 'Jubail' | 'Dammam' | 'Maharashtra') => {
   const regionInitial = region.charAt(0).toUpperCase();
