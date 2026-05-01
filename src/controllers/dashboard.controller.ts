@@ -52,7 +52,7 @@ const getFinancialYearKey = (dateInput: Date | string) => {
 
 const getFinancialYearLabel = (financialYearKey: string) => {
   const [startYear, endYear] = financialYearKey.split('-');
-  return `${startYear} to ${endYear}`;
+  return `${startYear} \u2192 ${endYear}`;
 };
 
 export const getDashboardStats = async (_req: Request, res: Response) => {
