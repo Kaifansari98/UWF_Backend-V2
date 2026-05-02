@@ -230,6 +230,30 @@ export const markAcknowledgementFormAsAccepted = async (req: Request, res: Respo
     }
 };
   
+export const deletePendingAcknowledgementForm = async (req: Request, res: Response): Promise<void> => {
+    const { formId } = req.params;
+
+    try {
+        const ackForm = await AcknowledgementForm.findOne({ where: { formId } });
+
+        if (!ackForm) {
+            res.status(404).json({ message: 'Acknowledgement form not found' });
+            return;
+        }
+
+        if ((ackForm as any).status !== 'pending') {
+            res.status(400).json({ message: 'Only pending acknowledgement forms can be deleted' });
+            return;
+        }
+
+        await ackForm.destroy();
+
+        res.status(200).json({ message: `Acknowledgement form ${formId} deleted successfully` });
+    } catch (error: any) {
+        res.status(500).json({ message: 'Failed to delete acknowledgement form', error: error.message });
+    }
+};
+
 export const revertAcknowledgementAcceptance = async (req: Request, res: Response): Promise<void> => {
     const { formId } = req.params;
   

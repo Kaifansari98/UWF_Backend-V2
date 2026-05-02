@@ -1,13 +1,15 @@
 import { Router } from 'express';
-import { 
-    generateAcknowledgementForm, 
-    uploadAcknowledgementInvoice, 
-    getCompleteStudentData, 
-    getAllPendingAcknowledgementForms, 
-    getAllSubmittedAcknowledgementForms, 
-    getAllAcceptedAcknowledgementForms, 
-    markAcknowledgementFormAsAccepted, 
-    revertAcknowledgementAcceptance  } from '../controllers/acknowledgement.controller';
+import {
+    generateAcknowledgementForm,
+    uploadAcknowledgementInvoice,
+    getCompleteStudentData,
+    getAllPendingAcknowledgementForms,
+    getAllSubmittedAcknowledgementForms,
+    getAllAcceptedAcknowledgementForms,
+    markAcknowledgementFormAsAccepted,
+    revertAcknowledgementAcceptance,
+    deletePendingAcknowledgementForm,
+} from '../controllers/acknowledgement.controller';
 import { uploadAcknowledgement } from '../middlewares/upload.middleware';
 import { authenticateToken } from '../middlewares/auth.middleware';
 
@@ -26,5 +28,6 @@ router.get('/accepted', getAllAcceptedAcknowledgementForms);
 
 router.put('/accept/:formId', authenticateToken, markAcknowledgementFormAsAccepted);
 router.put('/revert-accept/:formId', authenticateToken, revertAcknowledgementAcceptance);
+router.delete('/pending/:formId', authenticateToken, deletePendingAcknowledgementForm);
 
 export default router;
