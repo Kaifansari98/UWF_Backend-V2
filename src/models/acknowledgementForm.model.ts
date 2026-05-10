@@ -1,7 +1,10 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../database/sequelize';
 
-class AcknowledgementForm extends Model {}
+class AcknowledgementForm extends Model {
+  public createdAt!: Date;
+  public updatedAt!: Date;
+}
 
 AcknowledgementForm.init({
   id: {
@@ -42,7 +45,6 @@ AcknowledgementForm.init({
   sequelize,
   modelName: 'AcknowledgementForm',
   tableName: 'acknowledgement_forms',
-  timestamps: false,
 });
 
 export default AcknowledgementForm;
