@@ -46,6 +46,5 @@ AcknowledgementForm.init({
     sequelize: sequelize_2.default,
     modelName: 'AcknowledgementForm',
     tableName: 'acknowledgement_forms',
-    timestamps: false,
 });
 exports.default = AcknowledgementForm;

@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.revertAcknowledgementAcceptance = exports.markAcknowledgementFormAsAccepted = exports.getAllAcceptedAcknowledgementForms = exports.getAllSubmittedAcknowledgementForms = exports.getAllPendingAcknowledgementForms = exports.getCompleteStudentData = exports.uploadAcknowledgementInvoice = exports.generateAcknowledgementForm = void 0;
+exports.revertAcknowledgementAcceptance = exports.deletePendingAcknowledgementForm = exports.markAcknowledgementFormAsAccepted = exports.getAllAcceptedAcknowledgementForms = exports.getAllSubmittedAcknowledgementForms = exports.getAllPendingAcknowledgementForms = exports.getCompleteStudentData = exports.uploadAcknowledgementInvoice = exports.generateAcknowledgementForm = void 0;
 const acknowledgementForm_model_1 = __importDefault(require("../models/acknowledgementForm.model"));
 const generatedForm_model_1 = __importDefault(require("../models/generatedForm.model"));
 const formSubmission_model_1 = __importDefault(require("../models/formSubmission.model"));
@@ -203,6 +203,26 @@ const markAcknowledgementFormAsAccepted = (req, res) => __awaiter(void 0, void 0
     }
 });
 exports.markAcknowledgementFormAsAccepted = markAcknowledgementFormAsAccepted;
+const deletePendingAcknowledgementForm = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { formId } = req.params;
+    try {
+        const ackForm = yield acknowledgementForm_model_1.default.findOne({ where: { formId } });
+        if (!ackForm) {
+            res.status(404).json({ message: 'Acknowledgement form not found' });
+            return;
+        }
+        if (ackForm.status !== 'pending') {
+            res.status(400).json({ message: 'Only pending acknowledgement forms can be deleted' });
+            return;
+        }
+        yield ackForm.destroy();
+        res.status(200).json({ message: `Acknowledgement form ${formId} deleted successfully` });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Failed to delete acknowledgement form', error: error.message });
+    }
+});
+exports.deletePendingAcknowledgementForm = deletePendingAcknowledgementForm;
 const revertAcknowledgementAcceptance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { formId } = req.params;
     try {

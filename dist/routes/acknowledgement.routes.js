@@ -14,4 +14,5 @@ router.get('/submitted', acknowledgement_controller_1.getAllSubmittedAcknowledge
 router.get('/accepted', acknowledgement_controller_1.getAllAcceptedAcknowledgementForms);
 router.put('/accept/:formId', auth_middleware_1.authenticateToken, acknowledgement_controller_1.markAcknowledgementFormAsAccepted);
 router.put('/revert-accept/:formId', auth_middleware_1.authenticateToken, acknowledgement_controller_1.revertAcknowledgementAcceptance);
+router.delete('/pending/:formId', auth_middleware_1.authenticateToken, acknowledgement_controller_1.deletePendingAcknowledgementForm);
 exports.default = router;

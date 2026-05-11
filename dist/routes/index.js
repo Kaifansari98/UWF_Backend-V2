@@ -10,6 +10,7 @@ const form_routes_1 = __importDefault(require("./form.routes"));
 const formSubmission_routes_1 = __importDefault(require("./formSubmission.routes"));
 const dashboard_routes_1 = __importDefault(require("./dashboard.routes"));
 const acknowledgement_routes_1 = __importDefault(require("./acknowledgement.routes"));
+const bankInfoLetter_routes_1 = __importDefault(require("./bankInfoLetter.routes"));
 const router = (0, express_1.Router)();
 router.use('/auth', auth_routes_1.default);
 router.use('/users', user_routes_1.default);
@@ -17,6 +18,7 @@ router.use('/forms', form_routes_1.default);
 router.use('/', formSubmission_routes_1.default);
 router.use('/dashboard', dashboard_routes_1.default);
 router.use('/acknowledgement', acknowledgement_routes_1.default);
+router.use('/bank-info-letters', bankInfoLetter_routes_1.default);
 router.get('/health', (_req, res) => {
     res.status(200).json({ status: 'OK', message: 'API is healthy' });
 });
