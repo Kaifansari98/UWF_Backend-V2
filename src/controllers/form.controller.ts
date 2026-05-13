@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import GeneratedForm from '../models/generatedForm.model';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { Op, Sequelize } from 'sequelize';
+import { getSingleParam } from '../utils/requestParams';
 
 const FRONTEND_URL = process.env.FRONTEND_URL?.trim() || 'http://localhost:3000';
 
@@ -105,7 +106,13 @@ export const generateFormForExistingStudent = async (req: AuthRequest, res: Resp
 
 export const getFormStatus = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { formId } = req.params;
+    const formId = getSingleParam(req.params.formId);
+
+    if (!formId) {
+      res.status(400).json({ message: 'formId is required' });
+      return;
+    }
+
     const form = await GeneratedForm.findOne({ where: { formId } });
 
     if (!form) {

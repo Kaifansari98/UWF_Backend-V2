@@ -16,6 +16,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deletePendingFormById = exports.getPendingForms = exports.getFormStatus = exports.generateFormForExistingStudent = exports.generateNewStudentForm = exports.getAllGeneratedForms = exports.generateFormId = void 0;
 const generatedForm_model_1 = __importDefault(require("../models/generatedForm.model"));
 const sequelize_1 = require("sequelize");
+const requestParams_1 = require("../utils/requestParams");
 const FRONTEND_URL = ((_a = process.env.FRONTEND_URL) === null || _a === void 0 ? void 0 : _a.trim()) || 'http://localhost:3000';
 const generateFormId = (region) => __awaiter(void 0, void 0, void 0, function* () {
     const regionInitial = region.charAt(0).toUpperCase();
@@ -108,7 +109,11 @@ const generateFormForExistingStudent = (req, res) => __awaiter(void 0, void 0, v
 exports.generateFormForExistingStudent = generateFormForExistingStudent;
 const getFormStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { formId } = req.params;
+        const formId = (0, requestParams_1.getSingleParam)(req.params.formId);
+        if (!formId) {
+            res.status(400).json({ message: 'formId is required' });
+            return;
+        }
         const form = yield generatedForm_model_1.default.findOne({ where: { formId } });
         if (!form) {
             res.status(404).json({ message: "Form not found" });

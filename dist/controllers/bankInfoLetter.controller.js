@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createBankInfoLetter = exports.searchBankInfoLetters = void 0;
+exports.softDeleteBankInfoLetter = exports.createBankInfoLetter = exports.searchBankInfoLetters = void 0;
 const sequelize_1 = require("sequelize");
 const bankInfoLetter_model_1 = __importDefault(require("../models/bankInfoLetter.model"));
 const user_model_1 = __importDefault(require("../models/user.model"));
@@ -163,3 +163,33 @@ const createBankInfoLetter = (req, res) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.createBankInfoLetter = createBankInfoLetter;
+const softDeleteBankInfoLetter = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        const { id } = req.params;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        const letter = yield bankInfoLetter_model_1.default.findOne({
+            where: {
+                id: Number(id),
+                is_deleted: false,
+            },
+        });
+        if (!letter) {
+            res.status(404).json({ message: 'Bank info letter not found' });
+            return;
+        }
+        yield letter.update({
+            is_deleted: true,
+            deleted_by: userId,
+        });
+        res.status(200).json({ message: 'Bank info letter deleted successfully' });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Failed to delete bank info letter', error });
+    }
+});
+exports.softDeleteBankInfoLetter = softDeleteBankInfoLetter;

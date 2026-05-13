@@ -22,7 +22,7 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.1",
+    "multer": "^2.1.1",
     "pg": "^8.16.2",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.8",
@@ -46,9 +46,22 @@
     "@types/node": "^24.0.3",
     "@types/sequelize": "^4.28.20",
     "nodemon": "^3.1.10",
-    "sequelize-cli": "^6.6.3",
+    "sequelize-cli": "^6.6.5",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "minimatch": "^9.0.7",
+      "brace-expansion": "^2.0.3",
+      "picomatch": "^2.3.2",
+      "lodash": "^4.17.21",
+      "underscore": "^1.13.8",
+      "dottie": "^2.0.7",
+      "qs": "^6.14.2",
+      "path-to-regexp": "^8.4.0",
+      "diff": "^4.0.4"
+    }
   }
 }

@@ -18,6 +18,7 @@ const user_model_1 = __importDefault(require("../models/user.model"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const requestParams_1 = require("../utils/requestParams");
 dotenv_1.default.config();
 const API_URL = ((_a = process.env.API_URL) === null || _a === void 0 ? void 0 : _a.trim()) || "http://localhost:5001";
 const getCurrentUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -76,7 +77,11 @@ const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.getAllUsers = getAllUsers;
 const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
+        const id = (0, requestParams_1.getSingleParam)(req.params.id);
+        if (!id) {
+            res.status(400).json({ message: 'id is required' });
+            return;
+        }
         const { username, full_name, password, role, email, age, country, state, city, pincode, mobile_no } = req.body;
         const user = yield user_model_1.default.findByPk(id);
         if (!user) {
@@ -115,7 +120,11 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.updateUser = updateUser;
 const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id } = req.params;
+    const id = (0, requestParams_1.getSingleParam)(req.params.id);
+    if (!id) {
+        res.status(400).json({ message: 'id is required' });
+        return;
+    }
     try {
         const user = yield user_model_1.default.findByPk(id);
         if (!user) {

@@ -194,3 +194,39 @@ export const createBankInfoLetter = async (req: AuthRequest, res: Response): Pro
     res.status(500).json({ message: 'Failed to create bank info letter', error });
   }
 };
+
+export const softDeleteBankInfoLetter = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { id } = req.params;
+
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const letter = await BankInfoLetter.findOne({
+      where: {
+        id: Number(id),
+        is_deleted: false,
+      },
+    });
+
+    if (!letter) {
+      res.status(404).json({ message: 'Bank info letter not found' });
+      return;
+    }
+
+    await letter.update({
+      is_deleted: true,
+      deleted_by: userId,
+    });
+
+    res.status(200).json({ message: 'Bank info letter deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete bank info letter', error });
+  }
+};

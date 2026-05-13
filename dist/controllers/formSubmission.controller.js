@@ -19,12 +19,17 @@ const acknowledgementForm_model_1 = __importDefault(require("../models/acknowled
 const sequelize_1 = require("sequelize");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const requestParams_1 = require("../utils/requestParams");
 // Inside formSubmission.controller.ts
 const formSubmission_service_1 = require("../services/formSubmission.service");
 const submitForm = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     try {
-        const { formId } = req.params;
+        const formId = (0, requestParams_1.getSingleParam)(req.params.formId);
+        if (!formId) {
+            res.status(400).json({ message: 'formId is required' });
+            return;
+        }
         const form = yield generatedForm_model_1.default.findOne({ where: { formId } });
         if (!form) {
             res.status(404).json({ message: 'Form not found' });
@@ -410,8 +415,12 @@ const getAcceptedFormSubmissions = (_req, res) => __awaiter(void 0, void 0, void
 exports.getAcceptedFormSubmissions = getAcceptedFormSubmissions;
 const updateAcceptedAmount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { formId } = req.params;
+        const formId = (0, requestParams_1.getSingleParam)(req.params.formId);
         const { amount } = req.body;
+        if (!formId) {
+            res.status(400).json({ message: 'formId is required' });
+            return;
+        }
         const savedAmount = yield (0, formSubmission_service_1.updateAcceptedAmountService)(formId, Number(amount));
         res.status(200).json({
             message: "Accepted amount updated successfully",
@@ -471,7 +480,11 @@ const revertTreasuryApproval = (req, res) => __awaiter(void 0, void 0, void 0, f
 });
 exports.revertTreasuryApproval = revertTreasuryApproval;
 const markFormAsDisbursed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { formId } = req.params;
+    const formId = (0, requestParams_1.getSingleParam)(req.params.formId);
+    if (!formId) {
+        res.status(400).json({ message: 'formId is required' });
+        return;
+    }
     try {
         const result = yield (0, formSubmission_service_1.markFormAsDisbursedService)(formId);
         res.status(200).json({

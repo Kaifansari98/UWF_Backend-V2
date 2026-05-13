@@ -5,6 +5,7 @@ import AcknowledgementForm from '../models/acknowledgementForm.model';
 import { col, fn, literal, Op, where } from 'sequelize';
 import fs from 'fs';
 import path from 'path';
+import { getSingleParam } from '../utils/requestParams';
 
 // Inside formSubmission.controller.ts
 import 
@@ -18,7 +19,12 @@ import
 
 export const submitForm = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { formId } = req.params;
+    const formId = getSingleParam(req.params.formId);
+
+    if (!formId) {
+      res.status(400).json({ message: 'formId is required' });
+      return;
+    }
 
     const form = await GeneratedForm.findOne({ where: { formId } });
     if (!form) {
@@ -464,8 +470,13 @@ export const getAcceptedFormSubmissions = async (_req: Request, res: Response): 
 
 export const updateAcceptedAmount = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { formId } = req.params;
+    const formId = getSingleParam(req.params.formId);
     const { amount } = req.body;
+
+    if (!formId) {
+      res.status(400).json({ message: 'formId is required' });
+      return;
+    }
 
     const savedAmount = await updateAcceptedAmountService(formId, Number(amount));
 
@@ -532,7 +543,12 @@ export const revertTreasuryApproval = async (
 };
 
 export const markFormAsDisbursed = async (req: Request, res: Response) => {
-  const { formId } = req.params;
+  const formId = getSingleParam(req.params.formId);
+
+  if (!formId) {
+    res.status(400).json({ message: 'formId is required' });
+    return;
+  }
 
   try {
     const result = await markFormAsDisbursedService(formId);

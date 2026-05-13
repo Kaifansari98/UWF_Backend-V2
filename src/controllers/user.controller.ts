@@ -5,6 +5,7 @@ import User from '../models/user.model';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
+import { getSingleParam } from '../utils/requestParams';
 dotenv.config();
 
 const API_URL = process.env.API_URL?.trim() || "http://localhost:5001";
@@ -80,7 +81,12 @@ export const getAllUsers = async (_req: Request, res: Response): Promise<void> =
 
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = getSingleParam(req.params.id);
+
+    if (!id) {
+      res.status(400).json({ message: 'id is required' });
+      return;
+    }
 
     const {
       username,
@@ -141,7 +147,12 @@ await user.update(updateData);
 };
 
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
+  const id = getSingleParam(req.params.id);
+
+  if (!id) {
+    res.status(400).json({ message: 'id is required' });
+    return;
+  }
 
   try {
     const user = await User.findByPk(id);
