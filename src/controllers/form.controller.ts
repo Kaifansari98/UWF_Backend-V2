@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import GeneratedForm from '../models/generatedForm.model';
+import FormSubmission from '../models/formSubmission.model';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { Op, Sequelize } from 'sequelize';
 import { getSingleParam } from '../utils/requestParams';
@@ -186,5 +187,70 @@ export const deletePendingFormById = async (req: Request, res: Response): Promis
     res.status(200).json({ message: `Form ${formId} deleted successfully` });
   } catch (error) {
     res.status(500).json({ message: 'Failed to delete form', error });
+  }
+};
+
+/**
+ * POST /forms/check-duplicate
+ * Body: { name: string, region: string }
+ *
+ * Checks form_submissions (joined with generated_forms for region) for a
+ * student whose full name (firstName + fatherName + familyName) matches the
+ * supplied name AND whose form was created for the given region.
+ *
+ * Returns:
+ *   { isDuplicate: boolean, matches: { formId, firstName, fatherName, familyName, schoolName }[] }
+ */
+export const checkDuplicateStudent = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name, region } = req.body;
+
+    if (!name || !region) {
+      res.status(400).json({ message: 'Both name and region are required' });
+      return;
+    }
+
+    const nameNormalized = (name as string).trim().toLowerCase();
+
+    // Pull all submissions whose generated form matches the region
+    const submissions = await FormSubmission.findAll({
+      include: [
+        {
+          model: GeneratedForm,
+          required: true,
+          where: { region },
+          attributes: ['formId', 'region'],
+        },
+      ],
+      attributes: ['formId', 'firstName', 'fatherName', 'familyName', 'schoolName'],
+    });
+
+    // Case-insensitive full-name comparison done in JS to avoid DB dialect differences
+    const matches = submissions
+      .filter((s) => {
+        const parts = [
+          s.getDataValue('firstName') ?? '',
+          s.getDataValue('fatherName') ?? '',
+          s.getDataValue('familyName') ?? '',
+        ]
+          .map((p: string) => p.trim())
+          .filter(Boolean);
+
+        return parts.join(' ').toLowerCase() === nameNormalized;
+      })
+      .map((s) => ({
+        formId: s.getDataValue('formId'),
+        firstName: s.getDataValue('firstName'),
+        fatherName: s.getDataValue('fatherName'),
+        familyName: s.getDataValue('familyName'),
+        schoolName: s.getDataValue('schoolName'),
+      }));
+
+    res.status(200).json({
+      isDuplicate: matches.length > 0,
+      matches,
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to check for duplicate student', error: err });
   }
 };
