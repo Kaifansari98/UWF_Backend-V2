@@ -1,16 +1,12 @@
 {
   "name": "uuid",
   "version": "14.0.0",
-<<<<<<< HEAD:vendor/uuid/package.json
   "description": "Patched CommonJS-compatible UUID build for sequelize",
-=======
-  "description": "RFC9562 UUIDs",
   "type": "module",
   "funding": [
     "https://github.com/sponsors/broofa",
     "https://github.com/sponsors/ctavan"
   ],
->>>>>>> 33ecf368379eb37594b663a4abafaffd1a9d599c:node_modules/uuid/package.json
   "commitlint": {
     "extends": [
       "@commitlint/config-conventional"
@@ -24,20 +20,20 @@
   ],
   "license": "MIT",
   "bin": {
-    "uuid": "./dist-node/bin/uuid"
+    "uuid": "./dist/bin/uuid"
   },
   "sideEffects": false,
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "node": "./dist-node/index.js",
+      "node": "./wrapper.mjs",
       "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
     "dist",
-    "dist-node",
+    "wrapper.mjs",
     "!**/test"
   ],
   "devDependencies": {
