@@ -38,8 +38,39 @@ export const generateFormId = async (region: 'Jubail' | 'Dammam' | 'Maharashtra'
 
 export const getAllGeneratedForms = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const forms = await GeneratedForm.findAll();
-    res.status(200).json({ forms }); // student_name is included by default
+    const submissions = await FormSubmission.findAll();
+
+    const forms = submissions.map((submission: any) => {
+      const student_name = [
+        submission.firstName,
+        submission.fatherName,
+        submission.familyName,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+
+      let status = 'submitted';
+      if (submission.isRejected) {
+        status = 'rejected';
+      } else if (submission.form_case_closed) {
+        status = 'case closed';
+      } else if (submission.form_disbursed) {
+        status = 'disbursed';
+      } else if (submission.form_accepted) {
+        status = 'accepted';
+      }
+
+      return {
+        formId: submission.formId,
+        student_name,
+        status,
+        form_link: `${FRONTEND_URL}/${submission.formId}`,
+        created_on: submission.submitted_at ?? submission.createdAt ?? submission.updatedAt,
+      };
+    });
+
+    res.status(200).json({ forms });
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch forms', error });
   }
