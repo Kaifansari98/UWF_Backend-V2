@@ -782,16 +782,6 @@ export const getCaseClosedForms = async (_req: Request, res: Response): Promise<
   try {
     const forms = await FormSubmission.findAll({
       where: { form_case_closed: true },
-      include: [
-        {
-          model: GeneratedForm,
-          where: { status: "case closed" },
-        },
-        {
-          model: AcknowledgementForm,
-          required: false
-        }
-      ]
     });
 
     res.status(200).json({ caseClosedForms: forms });
