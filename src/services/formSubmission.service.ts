@@ -157,16 +157,11 @@ const parseFormId = (formId: string) => {
 };
 
 export const getAllUniqueNewStudentSubmissions = async () => {
-  // Get all non-pending submissions with their generated form
   const all = await FormSubmission.findAll({
-    include: [
-      {
-        model: GeneratedForm,
-        where: {
-          status: { [Op.ne]: "pending" },
-        },
-      },
-    ],
+    where: {
+      isRejected: false,
+      form_case_closed: true,
+    },
   });
 
   const seenKeys = new Set<string>();
