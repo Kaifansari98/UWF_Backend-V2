@@ -57,6 +57,39 @@ export const uploadFormData = multer({
   }
 });
 
+// Replacing a single already-submitted FormData file (super admin re-upload).
+// Filename is derived from :formId + :field (not the multipart fieldname),
+// so the route can accept a single canonical field (e.g. "file") for any of
+// the replaceable columns.
+const REPLACEABLE_FORM_FIELDS = ['feesStructure', 'marksheet', 'signature', 'parentApprovalLetter'];
+
+const formReplacementStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, formDataPath);
+  },
+  filename: (req: Request, file, cb) => {
+    const { formId, field } = req.params;
+    const ext = path.extname(file.originalname);
+    cb(null, `${formId}${field}${ext}`);
+  }
+});
+
+export const uploadFormFileReplacement = multer({
+  storage: formReplacementStorage,
+  fileFilter: (req, file, cb) => {
+    if (!REPLACEABLE_FORM_FIELDS.includes(req.params.field as string)) {
+      cb(new Error('Invalid field'));
+      return;
+    }
+    const allowedMimeTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF or image files are allowed'));
+    }
+  }
+});
+
 // Separate middleware for user profile pictures
 const userDataPath = path.join(__dirname, '../../assets/UserData');
 if (!fs.existsSync(userDataPath)) {

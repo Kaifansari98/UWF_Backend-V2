@@ -1,8 +1,18 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const dashboard_controller_1 = require("../controllers/dashboard.controller");
-const auth_middleware_1 = require("../middlewares/auth.middleware");
-const router = (0, express_1.Router)();
-router.get('/stats', dashboard_controller_1.getDashboardStats, auth_middleware_1.authenticateToken);
-exports.default = router;
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function() {
+        return _default;
+    }
+});
+const _express = require("express");
+const _dashboardcontroller = require("../controllers/dashboard.controller");
+const _authmiddleware = require("../middlewares/auth.middleware");
+const router = (0, _express.Router)();
+router.get('/stats', _dashboardcontroller.getDashboardStats, _authmiddleware.authenticateToken);
+const _default = router;
+
+//# sourceMappingURL=dashboard.routes.js.map

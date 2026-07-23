@@ -6,6 +6,7 @@ import { col, fn, literal, Op, where } from 'sequelize';
 import fs from 'fs';
 import path from 'path';
 import { getSingleParam } from '../utils/requestParams';
+import { AuthRequest } from '../middlewares/auth.middleware';
 
 // Inside formSubmission.controller.ts
 import 
@@ -223,6 +224,59 @@ export const editFormSubmission = async (req: Request, res: Response): Promise<v
   } catch (error) {
     res.status(500).json({
       message: 'Failed to update form submission',
+      error: (error as Error).message
+    });
+  }
+};
+
+const REPLACEABLE_FORM_FIELDS = ['feesStructure', 'marksheet', 'signature', 'parentApprovalLetter'];
+
+export const reuploadSubmissionFile = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (req.user?.role !== 'super_admin') {
+      res.status(403).json({ message: 'Only Super Admin can replace submission files' });
+      return;
+    }
+
+    const formId = req.params.formId as string;
+    const field = req.params.field as string;
+
+    if (!REPLACEABLE_FORM_FIELDS.includes(field)) {
+      res.status(400).json({ message: 'Invalid field' });
+      return;
+    }
+
+    if (!req.file) {
+      res.status(400).json({ message: 'File is required' });
+      return;
+    }
+
+    const submission = await FormSubmission.findOne({ where: { formId } });
+    if (!submission) {
+      res.status(404).json({ message: 'Submission not found' });
+      return;
+    }
+
+    const oldFileName = submission.getDataValue(field);
+    const newFileName = req.file.filename;
+
+    if (oldFileName && oldFileName !== newFileName) {
+      const oldFilePath = path.join(__dirname, `../../assets/FormData/${oldFileName}`);
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlinkSync(oldFilePath);
+      }
+    }
+
+    await submission.update({ [field]: newFileName });
+
+    res.status(200).json({
+      message: 'File replaced successfully',
+      field,
+      filename: newFileName
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to replace file',
       error: (error as Error).message
     });
   }

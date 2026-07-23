@@ -1,161 +1,200 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDashboardStats = void 0;
-const sequelize_1 = require("sequelize");
-const generatedForm_model_1 = __importDefault(require("../models/generatedForm.model"));
-const formSubmission_model_1 = __importDefault(require("../models/formSubmission.model"));
-const getDashboardStats = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const currentYear = new Date().getFullYear();
-        const startOfYear = new Date(`${currentYear}-01-01T00:00:00Z`);
-        const endOfYear = new Date(`${currentYear}-12-31T23:59:59Z`);
-        // ✅ Reusable helper to count forms by status (multiple or single)
-        const countForms = (statuses, isCurrentYear) => __awaiter(void 0, void 0, void 0, function* () {
-            return yield generatedForm_model_1.default.count({
-                where: Object.assign({ status: { [sequelize_1.Op.in]: statuses } }, (isCurrentYear && {
-                    created_on: { [sequelize_1.Op.between]: [startOfYear, endOfYear] }
-                }))
-            });
-        });
-        // 1️⃣ Students aided (status = 'case closed')
-        const totalStudentsAided = yield countForms(['case closed'], false);
-        const currentYearStudentsAided = yield countForms(['case closed'], true);
-        // 2️⃣ Amount disbursed (from FormSubmission.acceptedAmount)
-        const allDisbursedSubmissions = yield formSubmission_model_1.default.findAll({
-            include: [
-                {
-                    model: generatedForm_model_1.default,
-                    where: {
-                        status: { [sequelize_1.Op.in]: ['case closed', 'disbursed'] }
-                    },
-                    attributes: []
-                }
-            ],
-            attributes: [[(0, sequelize_1.fn)('SUM', (0, sequelize_1.col)('acceptedAmount')), 'total']],
-            raw: true
-        });
-        const currentYearDisbursedSubmissions = yield formSubmission_model_1.default.findAll({
-            include: [
-                {
-                    model: generatedForm_model_1.default,
-                    where: {
-                        status: { [sequelize_1.Op.in]: ['case closed', 'disbursed'] },
-                        created_on: { [sequelize_1.Op.between]: [startOfYear, endOfYear] }
-                    },
-                    attributes: []
-                }
-            ],
-            attributes: [[(0, sequelize_1.fn)('SUM', (0, sequelize_1.col)('acceptedAmount')), 'total']],
-            raw: true
-        });
-        const parseAmount = (res) => { var _a; return parseFloat(((_a = res[0]) === null || _a === void 0 ? void 0 : _a.total) || '0'); };
-        // 3️⃣ Requests received (status ≠ pending)
-        const validStatuses = ['submitted', 'disbursed', 'rejected', 'case closed', 'accepted'];
-        const totalRequests = yield countForms(validStatuses, false);
-        const currentYearRequests = yield countForms(validStatuses, true);
-        // 📗 Request Accepted (accepted/disbursed/case closed)
-        const requestAcceptedOverall = yield countForms(['accepted', 'disbursed', 'case closed'], false);
-        const requestAcceptedCurrentYear = yield countForms(['accepted', 'disbursed', 'case closed'], true);
-        // ⏳ Request Pending
-        const requestPendingOverall = yield countForms(['pending'], false);
-        const requestPendingCurrentYear = yield countForms(['pending'], true);
-        // ❌ Request Rejected
-        const requestRejectedOverall = yield countForms(['rejected'], false);
-        const requestRejectedCurrentYear = yield countForms(['rejected'], true);
-        // 💸 Cases Disbursed
-        const casesDisbursedOverall = yield countForms(['disbursed'], false);
-        const casesDisbursedCurrentYear = yield countForms(['disbursed'], true);
-        // 📁 Cases Closed
-        const casesClosedOverall = yield countForms(['case closed'], false);
-        const casesClosedCurrentYear = yield countForms(['case closed'], true);
-        // 📊 Year-wise: Students Aided
-        const studentsAidedPerYear = yield generatedForm_model_1.default.findAll({
-            where: {
-                status: { [sequelize_1.Op.in]: ['case closed', 'disbursed'] }
-            },
-            attributes: [
-                [(0, sequelize_1.literal)('EXTRACT(YEAR FROM "created_on")'), 'year'],
-                [(0, sequelize_1.fn)('COUNT', (0, sequelize_1.col)('formId')), 'students']
-            ],
-            group: ['year'],
-            order: [['year', 'ASC']],
-            raw: true
-        });
-        // 📊 Year-wise: Amount Disbursed
-        const amountDisbursedPerYear = yield formSubmission_model_1.default.findAll({
-            include: [
-                {
-                    model: generatedForm_model_1.default,
-                    where: { status: { [sequelize_1.Op.in]: ['case closed', 'disbursed'] } },
-                    attributes: []
-                }
-            ],
-            attributes: [
-                [(0, sequelize_1.literal)('EXTRACT(YEAR FROM "GeneratedForm"."created_on")'), 'year'],
-                [(0, sequelize_1.fn)('SUM', (0, sequelize_1.col)('acceptedAmount')), 'amount']
-            ],
-            group: ['year'],
-            order: [['year', 'ASC']],
-            raw: true
-        });
-        res.status(200).json({
-            studentsAided: {
-                overall: totalStudentsAided,
-                currentYear: currentYearStudentsAided
-            },
-            amountDisbursed: {
-                overall: parseAmount(allDisbursedSubmissions),
-                currentYear: parseAmount(currentYearDisbursedSubmissions)
-            },
-            requestsReceived: {
-                overall: totalRequests,
-                currentYear: currentYearRequests
-            },
-            requestAccepted: {
-                overall: requestAcceptedOverall,
-                currentYear: requestAcceptedCurrentYear
-            },
-            requestPending: {
-                overall: requestPendingOverall,
-                currentYear: requestPendingCurrentYear
-            },
-            requestRejected: {
-                overall: requestRejectedOverall,
-                currentYear: requestRejectedCurrentYear
-            },
-            casesDisbursed: {
-                overall: casesDisbursedOverall,
-                currentYear: casesDisbursedCurrentYear
-            },
-            casesClosed: {
-                overall: casesClosedOverall,
-                currentYear: casesClosedCurrentYear
-            },
-            studentsAidedPerYear: studentsAidedPerYear.map((item) => ({
-                year: item.year,
-                students: parseInt(item.students)
-            })),
-            amountDisbursedPerYear: amountDisbursedPerYear.map((item) => ({
-                year: item.year,
-                amount: parseFloat(item.amount)
-            }))
-        });
-    }
-    catch (error) {
-        console.error('❌ Dashboard fetch error:', error);
-        res.status(500).json({ message: 'Failed to fetch dashboard data', error });
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "getDashboardStats", {
+    enumerable: true,
+    get: function() {
+        return getDashboardStats;
     }
 });
-exports.getDashboardStats = getDashboardStats;
+const _sequelize = require("sequelize");
+const _generatedFormmodel = /*#__PURE__*/ _interop_require_default(require("../models/generatedForm.model"));
+const _formSubmissionmodel = /*#__PURE__*/ _interop_require_default(require("../models/formSubmission.model"));
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+    try {
+        var info = gen[key](arg);
+        var value = info.value;
+    } catch (error) {
+        reject(error);
+        return;
+    }
+    if (info.done) resolve(value);
+    else Promise.resolve(value).then(_next, _throw);
+}
+function _async_to_generator(fn) {
+    return function() {
+        var self = this, args = arguments;
+        return new Promise(function(resolve, reject) {
+            var gen = fn.apply(self, args);
+            function _next(value) {
+                asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+            }
+            function _throw(err) {
+                asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+            }
+            _next(undefined);
+        });
+    };
+}
+function _interop_require_default(obj) {
+    return obj && obj.__esModule ? obj : {
+        default: obj
+    };
+}
+const createEmptySummary = ()=>({
+        studentsAided: 0,
+        amountDisbursed: 0,
+        requestsReceived: 0,
+        requestAccepted: 0,
+        requestPending: 0,
+        requestRejected: 0,
+        casesDisbursed: 0,
+        casesClosed: 0
+    });
+const getFinancialYearStart = (date)=>{
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+    return month >= 3 ? year : year - 1;
+};
+const getFinancialYearKey = (dateInput)=>{
+    const date = new Date(dateInput);
+    const startYear = getFinancialYearStart(date);
+    return `${startYear}-${startYear + 1}`;
+};
+const getFinancialYearLabel = (financialYearKey)=>{
+    const [startYear, endYear] = financialYearKey.split('-');
+    return `${startYear} \u2192 ${endYear}`;
+};
+const getDashboardStats = (_req, res)=>_async_to_generator(function*() {
+        try {
+            const generatedForms = yield _generatedFormmodel.default.findAll({
+                attributes: [
+                    'formId',
+                    'status',
+                    'created_on'
+                ],
+                raw: true
+            });
+            const disbursedSubmissions = yield _formSubmissionmodel.default.findAll({
+                include: [
+                    {
+                        model: _generatedFormmodel.default,
+                        attributes: [
+                            'created_on'
+                        ],
+                        where: {
+                            status: {
+                                [_sequelize.Op.in]: [
+                                    'case closed',
+                                    'disbursed'
+                                ]
+                            }
+                        }
+                    }
+                ],
+                attributes: [
+                    'acceptedAmount'
+                ],
+                raw: true,
+                nest: true
+            });
+            const financialYearMap = new Map();
+            const ensureSummary = (key)=>{
+                if (!financialYearMap.has(key)) {
+                    financialYearMap.set(key, createEmptySummary());
+                }
+                return financialYearMap.get(key);
+            };
+            const overall = createEmptySummary();
+            for (const form of generatedForms){
+                const financialYearKey = getFinancialYearKey(form.created_on);
+                const summary = ensureSummary(financialYearKey);
+                const targets = [
+                    overall,
+                    summary
+                ];
+                for (const target of targets){
+                    target.requestsReceived += 1;
+                    if (form.status === 'case closed') {
+                        target.studentsAided += 1;
+                        target.requestAccepted += 1;
+                        target.casesClosed += 1;
+                    }
+                    if (form.status === 'accepted') {
+                        target.requestAccepted += 1;
+                    }
+                    if (form.status === 'disbursed') {
+                        target.requestAccepted += 1;
+                        target.casesDisbursed += 1;
+                    }
+                    if (form.status === 'pending') {
+                        target.requestPending += 1;
+                    }
+                    if (form.status === 'rejected') {
+                        target.requestRejected += 1;
+                    }
+                }
+            }
+            for (const submission of disbursedSubmissions){
+                var _submission_GeneratedForm;
+                const createdOn = (_submission_GeneratedForm = submission.GeneratedForm) === null || _submission_GeneratedForm === void 0 ? void 0 : _submission_GeneratedForm.created_on;
+                if (!createdOn) continue;
+                const amount = Number(submission.acceptedAmount || 0);
+                const financialYearKey = getFinancialYearKey(createdOn);
+                const summary = ensureSummary(financialYearKey);
+                overall.amountDisbursed += amount;
+                summary.amountDisbursed += amount;
+            }
+            const financialYearKeys = [
+                ...financialYearMap.keys()
+            ].sort((a, b)=>{
+                const [aStart] = a.split('-').map(Number);
+                const [bStart] = b.split('-').map(Number);
+                return aStart - bStart;
+            });
+            const financialYearOptions = financialYearKeys.map((key)=>({
+                    key,
+                    label: getFinancialYearLabel(key)
+                }));
+            res.status(200).json({
+                financialYearOptions: [
+                    ...financialYearOptions,
+                    {
+                        key: 'overall',
+                        label: 'Overall'
+                    }
+                ],
+                summary: {
+                    overall,
+                    byFinancialYear: Object.fromEntries(financialYearMap.entries())
+                },
+                studentsAidedPerFinancialYear: financialYearKeys.map((key)=>{
+                    var _ref;
+                    var _financialYearMap_get;
+                    return {
+                        key,
+                        label: getFinancialYearLabel(key),
+                        students: (_ref = (_financialYearMap_get = financialYearMap.get(key)) === null || _financialYearMap_get === void 0 ? void 0 : _financialYearMap_get.studentsAided) !== null && _ref !== void 0 ? _ref : 0
+                    };
+                }),
+                amountDisbursedPerFinancialYear: financialYearKeys.map((key)=>{
+                    var _ref;
+                    var _financialYearMap_get;
+                    return {
+                        key,
+                        label: getFinancialYearLabel(key),
+                        amount: (_ref = (_financialYearMap_get = financialYearMap.get(key)) === null || _financialYearMap_get === void 0 ? void 0 : _financialYearMap_get.amountDisbursed) !== null && _ref !== void 0 ? _ref : 0
+                    };
+                })
+            });
+        } catch (error) {
+            console.error('❌ Dashboard fetch error:', error);
+            res.status(500).json({
+                message: 'Failed to fetch dashboard data',
+                error
+            });
+        }
+    })();
+
+//# sourceMappingURL=dashboard.controller.js.map

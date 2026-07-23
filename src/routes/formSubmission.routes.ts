@@ -23,9 +23,10 @@ import {
   markFormAsCaseClosed,
   getCaseClosedForms,
   revertCaseClosed,
-  getCaseClosedFormsCurrentYear
+  getCaseClosedFormsCurrentYear,
+  reuploadSubmissionFile
 } from '../controllers/formSubmission.controller';
-import { uploadFormData } from '../middlewares/upload.middleware';
+import { uploadFormData, uploadFormFileReplacement } from '../middlewares/upload.middleware';
 import { authenticateToken } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -51,6 +52,13 @@ router.put(
     { name: 'parentApprovalLetter', maxCount: 1 },
   ]),
   editFormSubmission
+);
+
+router.put(
+  '/submissions/:formId/reupload/:field',
+  authenticateToken,
+  uploadFormFileReplacement.single('file'),
+  reuploadSubmissionFile
 );
 
 router.get('/submissions/submitted', authenticateToken, getSubmittedFormSubmissions);
