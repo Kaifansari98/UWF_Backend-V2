@@ -49,6 +49,7 @@ router.put('/submissions/edit/:formId', _authmiddleware.authenticateToken, _uplo
         maxCount: 1
     }
 ]), _formSubmissioncontroller.editFormSubmission);
+router.put('/submissions/:formId/reupload/:field', _authmiddleware.authenticateToken, _uploadmiddleware.uploadFormFileReplacement.single('file'), _formSubmissioncontroller.reuploadSubmissionFile);
 router.get('/submissions/submitted', _authmiddleware.authenticateToken, _formSubmissioncontroller.getSubmittedFormSubmissions);
 router.delete('/submissions/delete', _authmiddleware.authenticateToken, _formSubmissioncontroller.deleteFormSubmission);
 router.put('/submissions/reject/:formId', _authmiddleware.authenticateToken, _formSubmissioncontroller.rejectFormSubmission);

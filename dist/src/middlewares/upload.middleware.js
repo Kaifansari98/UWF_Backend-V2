@@ -15,6 +15,9 @@ _export(exports, {
     get uploadFormData () {
         return uploadFormData;
     },
+    get uploadFormFileReplacement () {
+        return uploadFormFileReplacement;
+    },
     get uploadUserProfile () {
         return uploadUserProfile;
     }
@@ -72,6 +75,47 @@ const uploadFormData = (0, _multer.default)({
             cb(null, true);
         } else {
             cb(new Error('Only PDF files are allowed'));
+        }
+    }
+});
+// Replacing a single already-submitted FormData file (super admin re-upload).
+// Filename is derived from :formId + :field (not the multipart fieldname),
+// so the route can accept a single canonical field (e.g. "file") for any of
+// the replaceable columns.
+const REPLACEABLE_FORM_FIELDS = [
+    'feesStructure',
+    'marksheet',
+    'signature',
+    'parentApprovalLetter'
+];
+const formReplacementStorage = _multer.default.diskStorage({
+    destination: (_req, _file, cb)=>{
+        cb(null, formDataPath);
+    },
+    filename: (req, file, cb)=>{
+        const { formId, field } = req.params;
+        const ext = _path.default.extname(file.originalname);
+        cb(null, `${formId}${field}${ext}`);
+    }
+});
+const uploadFormFileReplacement = (0, _multer.default)({
+    storage: formReplacementStorage,
+    fileFilter: (req, file, cb)=>{
+        if (!REPLACEABLE_FORM_FIELDS.includes(req.params.field)) {
+            cb(new Error('Invalid field'));
+            return;
+        }
+        const allowedMimeTypes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp'
+        ];
+        if (allowedMimeTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only PDF or image files are allowed'));
         }
     }
 });

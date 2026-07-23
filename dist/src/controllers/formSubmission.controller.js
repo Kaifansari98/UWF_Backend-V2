@@ -57,6 +57,9 @@ _export(exports, {
     get rejectFormSubmission () {
         return rejectFormSubmission;
     },
+    get reuploadSubmissionFile () {
+        return reuploadSubmissionFile;
+    },
     get revertCaseClosed () {
         return revertCaseClosed;
     },
@@ -351,6 +354,69 @@ const editFormSubmission = (req, res)=>_async_to_generator(function*() {
         } catch (error) {
             res.status(500).json({
                 message: 'Failed to update form submission',
+                error: error.message
+            });
+        }
+    })();
+const REPLACEABLE_FORM_FIELDS = [
+    'feesStructure',
+    'marksheet',
+    'signature',
+    'parentApprovalLetter'
+];
+const reuploadSubmissionFile = (req, res)=>_async_to_generator(function*() {
+        try {
+            var _req_user;
+            if (((_req_user = req.user) === null || _req_user === void 0 ? void 0 : _req_user.role) !== 'super_admin') {
+                res.status(403).json({
+                    message: 'Only Super Admin can replace submission files'
+                });
+                return;
+            }
+            const formId = req.params.formId;
+            const field = req.params.field;
+            if (!REPLACEABLE_FORM_FIELDS.includes(field)) {
+                res.status(400).json({
+                    message: 'Invalid field'
+                });
+                return;
+            }
+            if (!req.file) {
+                res.status(400).json({
+                    message: 'File is required'
+                });
+                return;
+            }
+            const submission = yield _formSubmissionmodel.default.findOne({
+                where: {
+                    formId
+                }
+            });
+            if (!submission) {
+                res.status(404).json({
+                    message: 'Submission not found'
+                });
+                return;
+            }
+            const oldFileName = submission.getDataValue(field);
+            const newFileName = req.file.filename;
+            if (oldFileName && oldFileName !== newFileName) {
+                const oldFilePath = _path.default.join(__dirname, `../../assets/FormData/${oldFileName}`);
+                if (_fs.default.existsSync(oldFilePath)) {
+                    _fs.default.unlinkSync(oldFilePath);
+                }
+            }
+            yield submission.update({
+                [field]: newFileName
+            });
+            res.status(200).json({
+                message: 'File replaced successfully',
+                field,
+                filename: newFileName
+            });
+        } catch (error) {
+            res.status(500).json({
+                message: 'Failed to replace file',
                 error: error.message
             });
         }
