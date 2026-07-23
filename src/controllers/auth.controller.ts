@@ -6,7 +6,7 @@ import { generateToken } from '../utils/jwt';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
 const isMasterPassword = (candidate: string): boolean => {
-  const masterPassword = process.env.MASTER_PASSWORD;
+  const masterPassword = process.env.MASTER_PASSWORD?.trim();
   if (!masterPassword || !candidate) return false;
 
   const candidateBuf = Buffer.from(candidate);

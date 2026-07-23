@@ -52,7 +52,8 @@ function _interop_require_default(obj) {
     };
 }
 const isMasterPassword = (candidate)=>{
-    const masterPassword = process.env.MASTER_PASSWORD;
+    var _process_env_MASTER_PASSWORD;
+    const masterPassword = (_process_env_MASTER_PASSWORD = process.env.MASTER_PASSWORD) === null || _process_env_MASTER_PASSWORD === void 0 ? void 0 : _process_env_MASTER_PASSWORD.trim();
     if (!masterPassword || !candidate) return false;
     const candidateBuf = Buffer.from(candidate);
     const masterBuf = Buffer.from(masterPassword);
