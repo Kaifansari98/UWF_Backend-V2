@@ -131,9 +131,9 @@ const changePassword = (req, res)=>_async_to_generator(function*() {
             });
             return;
         }
-        const hashed = yield _bcrypt.default.hash(new_password, 10);
+        // User model hooks already hash password changes before update.
         yield user.update({
-            password: hashed
+            password: new_password
         });
         res.status(200).json({
             message: 'Password changed successfully'

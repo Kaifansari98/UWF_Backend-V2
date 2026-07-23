@@ -78,8 +78,8 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
     return;
   }
 
-  const hashed = await bcrypt.hash(new_password, 10);
-  await user.update({ password: hashed });
+  // User model hooks already hash password changes before update.
+  await user.update({ password: new_password });
 
   res.status(200).json({ message: 'Password changed successfully' });
 };
