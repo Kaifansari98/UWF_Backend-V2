@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import bcrypt from "bcrypt";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import User from "../models/user.model";
 import fs from "fs";
@@ -10,6 +9,21 @@ dotenv.config();
 
 const API_URL = process.env.API_URL?.trim() || "http://localhost:5001";
 
+const USER_SAFE_ATTRIBUTES = [
+  "id",
+  "username",
+  "full_name",
+  "role",
+  "email",
+  "age",
+  "country",
+  "state",
+  "city",
+  "pincode",
+  "mobile_no",
+  "profile_pic",
+];
+
 export const getCurrentUser = async (
   req: AuthRequest,
   res: Response,
@@ -18,14 +32,7 @@ export const getCurrentUser = async (
 
   try {
     const user = await User.findByPk(userId, {
-      attributes: [
-        "id",
-        "username",
-        "email",
-        "role",
-        "full_name",
-        "profile_pic",
-      ], // ✅ added
+      attributes: USER_SAFE_ATTRIBUTES,
     });
 
     if (!user) {
@@ -62,8 +69,6 @@ export const createUser = async (
       ? `${API_URL}/assets/UserData/${req.file.originalname}`
       : null;
 
-    // const hashedPassword = await bcrypt.hash(password, 10);
-
     const user = await User.create({
       username,
       full_name,
@@ -79,7 +84,8 @@ export const createUser = async (
       profile_pic,
     });
 
-    res.status(201).json({ message: "User created", user });
+    const safeUser = await User.findByPk(user.id, { attributes: USER_SAFE_ATTRIBUTES });
+    res.status(201).json({ message: "User created", user: safeUser });
   } catch (error) {
     res.status(500).json({ message: "Failed to create user", error });
   }
@@ -90,7 +96,7 @@ export const getAllUsers = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const users = await User.findAll();
+    const users = await User.findAll({ attributes: USER_SAFE_ATTRIBUTES });
     res.status(200).json({ users });
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch users", error: err });
@@ -154,12 +160,11 @@ export const updateUser = async (
 
     await user.update(updateData);
 
+    const safeUser = await User.findByPk(id, { attributes: USER_SAFE_ATTRIBUTES });
+
     res.status(200).json({
       message: "User updated successfully",
-      user: {
-        ...user.toJSON(),
-        profile_pic: user.profile_pic,
-      },
+      user: safeUser,
     });
   } catch (error) {
     res.status(500).json({ message: "Failed to update user", error });
