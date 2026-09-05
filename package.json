@@ -61,7 +61,7 @@
       "lodash": "^4.17.21",
       "underscore": "^1.13.8",
       "dottie": "^2.0.7",
-      "qs": "^6.15.2",
+      "qs": "^6.16.0",
       "sequelize>uuid": "^11.1.1",
       "js-beautify>js-cookie": "^3.0.7",
       "path-to-regexp": "^8.4.0",
