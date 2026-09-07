@@ -14,18 +14,26 @@ export const generateFormId = async (
 ) => {
   const regionInitial = region.charAt(0).toUpperCase();
   const currentYear = new Date().getFullYear();
-  const prefix = `${regionInitial}${currentYear}`;
 
-  // Find the max sequence for this region+year. Lock the row (when inside a
-  // transaction) so concurrent requests can't read the same "latest" form
-  // before either has committed its INSERT.
+  // The last 4 digits are a *permanent* per-student sequence: when an
+  // existing student's form is regenerated (generateFormForExistingStudent),
+  // the same suffix is reused with just the year swapped. So a brand-new
+  // student must get a suffix higher than any ever issued for this region,
+  // in ANY year — not just the current year — otherwise a later
+  // regeneration for an old student can collide with a fresh one.
+  //
+  // Order by the numeric value of the suffix (not created_on/formId text,
+  // which can put a recently-regenerated old suffix "after" a numerically
+  // higher one from an earlier new-student form). This selects a real row,
+  // so it can still be locked inside a transaction to serialize concurrent
+  // callers.
   const latestForm = await GeneratedForm.findOne({
     where: {
       formId: {
-        [Op.like]: `${prefix}%`
+        [Op.like]: `${regionInitial}%`
       }
     },
-    order: [['formId', 'DESC']],
+    order: [[Sequelize.literal(`CAST(RIGHT("formId", 4) AS INTEGER)`), 'DESC']],
     transaction,
     lock: transaction ? transaction.LOCK.UPDATE : undefined
   });
@@ -41,7 +49,7 @@ export const generateFormId = async (
   }
 
   // Now build new formId with current year and next sequence
-  const newFormId = `${prefix}${String(nextSequence).padStart(4, '0')}`;
+  const newFormId = `${regionInitial}${currentYear}${String(nextSequence).padStart(4, '0')}`;
   return newFormId;
 };
 
@@ -151,7 +159,16 @@ export const generateFormForExistingStudent = async (req: AuthRequest, res: Resp
     const currentYear = new Date().getFullYear();
     const newFormId = `${prefix}${currentYear}${sequence}`;
     const form_link = `${FRONTEND_URL}/${newFormId}`;
-  
+
+    // This student's form for the current year may already have been
+    // generated (e.g. a duplicate "resend" click) — return it instead of
+    // hitting the formId unique constraint.
+    const existingForm = await GeneratedForm.findOne({ where: { formId: newFormId } });
+    if (existingForm) {
+      res.status(200).json({ message: 'Form already exists for this student and year', form: existingForm });
+      return;
+    }
+
     const newForm = await GeneratedForm.create({
       formId: newFormId,
       region: oldForm.region,
@@ -162,7 +179,11 @@ export const generateFormForExistingStudent = async (req: AuthRequest, res: Resp
     });
 
     res.status(201).json({ message: 'Form created for existing student', form: newForm });
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.name === 'SequelizeUniqueConstraintError' && err?.fields?.formId !== undefined) {
+      res.status(409).json({ message: 'Form already exists for this student and year', error: err });
+      return;
+    }
     res.status(500).json({ message: 'Failed to create form', error: err });
   }
 };
