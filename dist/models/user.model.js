@@ -1,67 +1,23 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-function _export(target, all) {
-    for(var name in all)Object.defineProperty(target, name, {
-        enumerable: true,
-        get: Object.getOwnPropertyDescriptor(all, name).get
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
-}
-_export(exports, {
-    get UserRole () {
-        return UserRole;
-    },
-    get default () {
-        return _default;
-    }
-});
-const _sequelize = require("sequelize");
-const _bcrypt = /*#__PURE__*/ _interop_require_default(require("bcrypt"));
-const _sequelize1 = /*#__PURE__*/ _interop_require_default(require("../database/sequelize"));
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-    try {
-        var info = gen[key](arg);
-        var value = info.value;
-    } catch (error) {
-        reject(error);
-        return;
-    }
-    if (info.done) resolve(value);
-    else Promise.resolve(value).then(_next, _throw);
-}
-function _async_to_generator(fn) {
-    return function() {
-        var self = this, args = arguments;
-        return new Promise(function(resolve, reject) {
-            var gen = fn.apply(self, args);
-            function _next(value) {
-                asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-            }
-            function _throw(err) {
-                asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-            }
-            _next(undefined);
-        });
-    };
-}
-function _define_property(obj, key, value) {
-    if (key in obj) {
-        Object.defineProperty(obj, key, {
-            value: value,
-            enumerable: true,
-            configurable: true,
-            writable: true
-        });
-    } else obj[key] = value;
-    return obj;
-}
-function _interop_require_default(obj) {
-    return obj && obj.__esModule ? obj : {
-        default: obj
-    };
-}
-var UserRole = /*#__PURE__*/ function(UserRole) {
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.UserRole = void 0;
+const sequelize_1 = require("sequelize");
+const bcrypt_1 = __importDefault(require("bcrypt"));
+const sequelize_2 = __importDefault(require("../database/sequelize")); // <- We'll define this connection
+var UserRole;
+(function (UserRole) {
     UserRole["SUPER_ADMIN"] = "super_admin";
     UserRole["ADMIN"] = "admin";
     UserRole["FORM_CREATOR"] = "form_creator";
@@ -70,52 +26,46 @@ var UserRole = /*#__PURE__*/ function(UserRole) {
     UserRole["APPROVER"] = "approver";
     UserRole["DISBURSEMENT"] = "disbursement_approver";
     UserRole["CASE_CLOSURE"] = "case_closure";
-    return UserRole;
-}({});
-class User extends _sequelize.Model {
-    constructor(...args){
-        super(...args), _define_property(this, "id", void 0), _define_property(this, "profile_pic", void 0), _define_property(this, "username", void 0), _define_property(this, "full_name", void 0), _define_property(this, "password", void 0), _define_property(this, "role", void 0), _define_property(this, "email", void 0), _define_property(this, "age", void 0), _define_property(this, "country", void 0), _define_property(this, "state", void 0), _define_property(this, "city", void 0), _define_property(this, "pincode", void 0), _define_property(this, "mobile_no", void 0);
-    }
+})(UserRole || (exports.UserRole = UserRole = {}));
+class User extends sequelize_1.Model {
 }
 User.init({
-    profile_pic: _sequelize.DataTypes.STRING,
+    profile_pic: sequelize_1.DataTypes.STRING,
     username: {
-        type: _sequelize.DataTypes.STRING,
+        type: sequelize_1.DataTypes.STRING,
         allowNull: false,
         unique: true
     },
-    full_name: _sequelize.DataTypes.STRING,
+    full_name: sequelize_1.DataTypes.STRING,
     password: {
-        type: _sequelize.DataTypes.STRING,
+        type: sequelize_1.DataTypes.STRING,
         allowNull: false
     },
     role: {
-        type: _sequelize.DataTypes.ENUM(...Object.values(UserRole)),
-        defaultValue: "admin"
+        type: sequelize_1.DataTypes.ENUM(...Object.values(UserRole)),
+        defaultValue: UserRole.ADMIN
     },
-    email: _sequelize.DataTypes.STRING,
-    age: _sequelize.DataTypes.INTEGER,
-    country: _sequelize.DataTypes.STRING,
-    state: _sequelize.DataTypes.STRING,
-    city: _sequelize.DataTypes.STRING,
-    pincode: _sequelize.DataTypes.STRING,
-    mobile_no: _sequelize.DataTypes.STRING
+    email: sequelize_1.DataTypes.STRING,
+    age: sequelize_1.DataTypes.INTEGER,
+    country: sequelize_1.DataTypes.STRING,
+    state: sequelize_1.DataTypes.STRING,
+    city: sequelize_1.DataTypes.STRING,
+    pincode: sequelize_1.DataTypes.STRING,
+    mobile_no: sequelize_1.DataTypes.STRING
 }, {
     tableName: 'users',
-    sequelize: _sequelize1.default,
+    sequelize: sequelize_2.default,
     hooks: {
-        beforeCreate: (user)=>_async_to_generator(function*() {
-                if (user.password) {
-                    user.password = yield _bcrypt.default.hash(user.password, 10);
-                }
-            })(),
-        beforeUpdate: (user)=>_async_to_generator(function*() {
-                if (user.changed('password')) {
-                    user.password = yield _bcrypt.default.hash(user.password, 10);
-                }
-            })()
+        beforeCreate: (user) => __awaiter(void 0, void 0, void 0, function* () {
+            if (user.password) {
+                user.password = yield bcrypt_1.default.hash(user.password, 10);
+            }
+        }),
+        beforeUpdate: (user) => __awaiter(void 0, void 0, void 0, function* () {
+            if (user.changed('password')) {
+                user.password = yield bcrypt_1.default.hash(user.password, 10);
+            }
+        })
     }
 });
-const _default = User;
-
-//# sourceMappingURL=user.model.js.map
+exports.default = User;

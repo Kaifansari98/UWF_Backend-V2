@@ -1,24 +1,14 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-Object.defineProperty(exports, "default", {
-    enumerable: true,
-    get: function() {
-        return _default;
-    }
-});
-const _express = require("express");
-const _formcontroller = require("../controllers/form.controller");
-const _authmiddleware = require("../middlewares/auth.middleware");
-const router = (0, _express.Router)();
-router.post('/generate/new', _authmiddleware.authenticateToken, _formcontroller.generateNewStudentForm);
-router.post('/generate/existing', _authmiddleware.authenticateToken, _formcontroller.generateFormForExistingStudent);
-router.post('/check-duplicate', _authmiddleware.authenticateToken, _formcontroller.checkDuplicateStudent);
-router.get('/all', _authmiddleware.authenticateToken, _formcontroller.getAllGeneratedForms);
-router.get('/status/:formId', _formcontroller.getFormStatus);
-router.get('/pending', _authmiddleware.authenticateToken, _formcontroller.getPendingForms);
-router.delete('/delete', _authmiddleware.authenticateToken, _formcontroller.deletePendingFormById);
-const _default = router;
-
-//# sourceMappingURL=form.routes.js.map
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const form_controller_1 = require("../controllers/form.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const router = (0, express_1.Router)();
+router.post('/generate/new', auth_middleware_1.authenticateToken, form_controller_1.generateNewStudentForm);
+router.post('/generate/existing', auth_middleware_1.authenticateToken, form_controller_1.generateFormForExistingStudent);
+router.post('/check-duplicate', auth_middleware_1.authenticateToken, form_controller_1.checkDuplicateStudent);
+router.get('/all', auth_middleware_1.authenticateToken, form_controller_1.getAllGeneratedForms);
+router.get('/status/:formId', form_controller_1.getFormStatus);
+router.get('/pending', auth_middleware_1.authenticateToken, form_controller_1.getPendingForms);
+router.delete('/delete', auth_middleware_1.authenticateToken, form_controller_1.deletePendingFormById);
+exports.default = router;

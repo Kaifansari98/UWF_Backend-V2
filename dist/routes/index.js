@@ -1,40 +1,25 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_routes_1 = __importDefault(require("./auth.routes"));
+const user_routes_1 = __importDefault(require("./user.routes"));
+const form_routes_1 = __importDefault(require("./form.routes"));
+const formSubmission_routes_1 = __importDefault(require("./formSubmission.routes"));
+const dashboard_routes_1 = __importDefault(require("./dashboard.routes"));
+const acknowledgement_routes_1 = __importDefault(require("./acknowledgement.routes"));
+const bankInfoLetter_routes_1 = __importDefault(require("./bankInfoLetter.routes"));
+const router = (0, express_1.Router)();
+router.use('/auth', auth_routes_1.default);
+router.use('/users', user_routes_1.default);
+router.use('/forms', form_routes_1.default);
+router.use('/', formSubmission_routes_1.default);
+router.use('/dashboard', dashboard_routes_1.default);
+router.use('/acknowledgement', acknowledgement_routes_1.default);
+router.use('/bank-info-letters', bankInfoLetter_routes_1.default);
+router.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'OK', message: 'API is healthy' });
 });
-Object.defineProperty(exports, "default", {
-    enumerable: true,
-    get: function() {
-        return _default;
-    }
-});
-const _express = require("express");
-const _authroutes = /*#__PURE__*/ _interop_require_default(require("./auth.routes"));
-const _userroutes = /*#__PURE__*/ _interop_require_default(require("./user.routes"));
-const _formroutes = /*#__PURE__*/ _interop_require_default(require("./form.routes"));
-const _formSubmissionroutes = /*#__PURE__*/ _interop_require_default(require("./formSubmission.routes"));
-const _dashboardroutes = /*#__PURE__*/ _interop_require_default(require("./dashboard.routes"));
-const _acknowledgementroutes = /*#__PURE__*/ _interop_require_default(require("./acknowledgement.routes"));
-const _bankInfoLetterroutes = /*#__PURE__*/ _interop_require_default(require("./bankInfoLetter.routes"));
-function _interop_require_default(obj) {
-    return obj && obj.__esModule ? obj : {
-        default: obj
-    };
-}
-const router = (0, _express.Router)();
-router.use('/auth', _authroutes.default);
-router.use('/users', _userroutes.default);
-router.use('/forms', _formroutes.default);
-router.use('/', _formSubmissionroutes.default);
-router.use('/dashboard', _dashboardroutes.default);
-router.use('/acknowledgement', _acknowledgementroutes.default);
-router.use('/bank-info-letters', _bankInfoLetterroutes.default);
-router.get('/health', (_req, res)=>{
-    res.status(200).json({
-        status: 'OK',
-        message: 'API is healthy'
-    });
-});
-const _default = router;
-
-//# sourceMappingURL=index.js.map
+exports.default = router;

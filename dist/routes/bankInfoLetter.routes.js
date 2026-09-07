@@ -1,20 +1,10 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-Object.defineProperty(exports, "default", {
-    enumerable: true,
-    get: function() {
-        return _default;
-    }
-});
-const _express = require("express");
-const _bankInfoLettercontroller = require("../controllers/bankInfoLetter.controller");
-const _authmiddleware = require("../middlewares/auth.middleware");
-const router = (0, _express.Router)();
-router.post('/search', _authmiddleware.authenticateToken, _bankInfoLettercontroller.searchBankInfoLetters);
-router.post('/', _authmiddleware.authenticateToken, _bankInfoLettercontroller.createBankInfoLetter);
-router.delete('/:id', _authmiddleware.authenticateToken, _bankInfoLettercontroller.softDeleteBankInfoLetter);
-const _default = router;
-
-//# sourceMappingURL=bankInfoLetter.routes.js.map
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const bankInfoLetter_controller_1 = require("../controllers/bankInfoLetter.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const router = (0, express_1.Router)();
+router.post('/search', auth_middleware_1.authenticateToken, bankInfoLetter_controller_1.searchBankInfoLetters);
+router.post('/', auth_middleware_1.authenticateToken, bankInfoLetter_controller_1.createBankInfoLetter);
+router.delete('/:id', auth_middleware_1.authenticateToken, bankInfoLetter_controller_1.softDeleteBankInfoLetter);
+exports.default = router;

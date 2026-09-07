@@ -1,22 +1,14 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-Object.defineProperty(exports, "getSingleParam", {
-    enumerable: true,
-    get: function() {
-        return getSingleParam;
-    }
-});
-const getSingleParam = (value)=>{
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getSingleParam = void 0;
+const getSingleParam = (value) => {
+    var _a;
     if (typeof value === 'string') {
         return value;
     }
     if (Array.isArray(value)) {
-        var _value_;
-        return (_value_ = value[0]) !== null && _value_ !== void 0 ? _value_ : null;
+        return (_a = value[0]) !== null && _a !== void 0 ? _a : null;
     }
     return null;
 };
-
-//# sourceMappingURL=requestParams.js.map
+exports.getSingleParam = getSingleParam;

@@ -1,24 +1,14 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-Object.defineProperty(exports, "default", {
-    enumerable: true,
-    get: function() {
-        return _default;
-    }
-});
-const _express = require("express");
-const _usercontroller = require("../controllers/user.controller");
-const _authmiddleware = require("../middlewares/auth.middleware");
-const _uploadmiddleware = require("../middlewares/upload.middleware");
-const router = (0, _express.Router)();
-router.get('/me', _authmiddleware.authenticateToken, _usercontroller.getCurrentUser);
-router.get('/', _authmiddleware.authenticateToken, _usercontroller.getAllUsers);
-router.put('/:id', _authmiddleware.authenticateToken, _uploadmiddleware.uploadUserProfile.single("profile_pic"), _usercontroller.updateUser);
-router.delete('/:id', _authmiddleware.authenticateToken, _usercontroller.deleteUser);
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const user_controller_1 = require("../controllers/user.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const upload_middleware_1 = require("../middlewares/upload.middleware");
+const router = (0, express_1.Router)();
+router.get('/me', auth_middleware_1.authenticateToken, user_controller_1.getCurrentUser);
+router.get('/', auth_middleware_1.authenticateToken, user_controller_1.getAllUsers);
+router.put('/:id', auth_middleware_1.authenticateToken, upload_middleware_1.uploadUserProfile.single("profile_pic"), user_controller_1.updateUser);
+router.delete('/:id', auth_middleware_1.authenticateToken, user_controller_1.deleteUser);
 // POST /api/users/create
-router.post('/create', _uploadmiddleware.uploadUserProfile.single('profile_pic'), _usercontroller.createUser);
-const _default = router;
-
-//# sourceMappingURL=user.routes.js.map
+router.post('/create', upload_middleware_1.uploadUserProfile.single('profile_pic'), user_controller_1.createUser);
+exports.default = router;

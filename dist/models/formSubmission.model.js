@@ -1,28 +1,18 @@
-// src/models/formSubmission.model.ts
 "use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-Object.defineProperty(exports, "default", {
-    enumerable: true,
-    get: function() {
-        return _default;
-    }
-});
-const _sequelize = require("sequelize");
-const _sequelize1 = /*#__PURE__*/ _interop_require_default(require("../database/sequelize"));
-const _generatedFormmodel = /*#__PURE__*/ _interop_require_default(require("./generatedForm.model"));
-const _acknowledgementFormmodel = /*#__PURE__*/ _interop_require_default(require("./acknowledgementForm.model"));
-function _interop_require_default(obj) {
-    return obj && obj.__esModule ? obj : {
-        default: obj
-    };
-}
-class FormSubmission extends _sequelize.Model {
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+// src/models/formSubmission.model.ts
+const sequelize_1 = require("sequelize");
+const sequelize_2 = __importDefault(require("../database/sequelize"));
+const generatedForm_model_1 = __importDefault(require("./generatedForm.model"));
+const acknowledgementForm_model_1 = __importDefault(require("./acknowledgementForm.model"));
+class FormSubmission extends sequelize_1.Model {
 }
 FormSubmission.init({
     formId: {
-        type: _sequelize.DataTypes.STRING,
+        type: sequelize_1.DataTypes.STRING,
         allowNull: false,
         references: {
             model: 'generated_forms',
@@ -30,72 +20,67 @@ FormSubmission.init({
         },
         onDelete: 'CASCADE'
     },
-    firstName: _sequelize.DataTypes.STRING,
-    fatherName: _sequelize.DataTypes.STRING,
-    familyName: _sequelize.DataTypes.STRING,
-    gender: _sequelize.DataTypes.ENUM('male', 'female'),
-    schoolName: _sequelize.DataTypes.STRING,
-    studyMedium: _sequelize.DataTypes.STRING,
-    class: _sequelize.DataTypes.STRING,
-    academicYear: _sequelize.DataTypes.STRING,
-    parentName: _sequelize.DataTypes.STRING,
-    mobile: _sequelize.DataTypes.STRING,
-    alternateMobile: _sequelize.DataTypes.STRING,
-    address: _sequelize.DataTypes.TEXT,
-    incomeSource: _sequelize.DataTypes.STRING,
-    reason: _sequelize.DataTypes.TEXT,
-    requested_amount: _sequelize.DataTypes.FLOAT,
-    feesStructure: _sequelize.DataTypes.STRING,
-    marksheet: _sequelize.DataTypes.STRING,
-    signature: _sequelize.DataTypes.STRING,
-    parentApprovalLetter: _sequelize.DataTypes.STRING,
-    bankAccountHolder: _sequelize.DataTypes.STRING,
-    bankAccountNumber: _sequelize.DataTypes.STRING,
-    ifscCode: _sequelize.DataTypes.STRING,
-    bankName: _sequelize.DataTypes.STRING,
-    coordinatorName: _sequelize.DataTypes.STRING,
-    coordinatorMobile: _sequelize.DataTypes.STRING,
+    firstName: sequelize_1.DataTypes.STRING,
+    fatherName: sequelize_1.DataTypes.STRING,
+    familyName: sequelize_1.DataTypes.STRING,
+    gender: sequelize_1.DataTypes.ENUM('male', 'female'),
+    schoolName: sequelize_1.DataTypes.STRING,
+    studyMedium: sequelize_1.DataTypes.STRING,
+    class: sequelize_1.DataTypes.STRING,
+    academicYear: sequelize_1.DataTypes.STRING,
+    parentName: sequelize_1.DataTypes.STRING,
+    mobile: sequelize_1.DataTypes.STRING,
+    alternateMobile: sequelize_1.DataTypes.STRING,
+    address: sequelize_1.DataTypes.TEXT,
+    incomeSource: sequelize_1.DataTypes.STRING,
+    reason: sequelize_1.DataTypes.TEXT,
+    requested_amount: sequelize_1.DataTypes.FLOAT,
+    feesStructure: sequelize_1.DataTypes.STRING,
+    marksheet: sequelize_1.DataTypes.STRING,
+    signature: sequelize_1.DataTypes.STRING,
+    parentApprovalLetter: sequelize_1.DataTypes.STRING,
+    bankAccountHolder: sequelize_1.DataTypes.STRING,
+    bankAccountNumber: sequelize_1.DataTypes.STRING,
+    ifscCode: sequelize_1.DataTypes.STRING,
+    bankName: sequelize_1.DataTypes.STRING,
+    coordinatorName: sequelize_1.DataTypes.STRING,
+    coordinatorMobile: sequelize_1.DataTypes.STRING,
     submitted_at: {
-        type: _sequelize.DataTypes.DATE,
-        defaultValue: _sequelize.DataTypes.NOW
+        type: sequelize_1.DataTypes.DATE,
+        defaultValue: sequelize_1.DataTypes.NOW
     },
     form_accepted: {
-        type: _sequelize.DataTypes.BOOLEAN,
+        type: sequelize_1.DataTypes.BOOLEAN,
         defaultValue: false
     },
     form_disbursed: {
-        type: _sequelize.DataTypes.BOOLEAN,
+        type: sequelize_1.DataTypes.BOOLEAN,
         defaultValue: false
     },
     form_case_closed: {
-        type: _sequelize.DataTypes.BOOLEAN,
+        type: sequelize_1.DataTypes.BOOLEAN,
         defaultValue: false
     },
     isRejected: {
-        type: _sequelize.DataTypes.BOOLEAN,
-        defaultValue: false
+        type: sequelize_1.DataTypes.BOOLEAN,
+        defaultValue: false,
     },
     acceptedAmount: {
-        type: _sequelize.DataTypes.FLOAT,
-        allowNull: true
-    }
+        type: sequelize_1.DataTypes.FLOAT,
+        allowNull: true,
+    },
 }, {
-    sequelize: _sequelize1.default,
+    sequelize: sequelize_2.default,
     modelName: 'FormSubmission',
     tableName: 'form_submissions'
 });
-FormSubmission.belongsTo(_generatedFormmodel.default, {
-    foreignKey: 'formId',
-    targetKey: 'formId'
-});
-FormSubmission.hasOne(_acknowledgementFormmodel.default, {
+FormSubmission.belongsTo(generatedForm_model_1.default, { foreignKey: 'formId', targetKey: 'formId' });
+FormSubmission.hasOne(acknowledgementForm_model_1.default, {
     foreignKey: "formId",
-    sourceKey: "formId"
+    sourceKey: "formId",
 });
-_acknowledgementFormmodel.default.belongsTo(FormSubmission, {
+acknowledgementForm_model_1.default.belongsTo(FormSubmission, {
     foreignKey: "formId",
-    targetKey: "formId"
+    targetKey: "formId",
 });
-const _default = FormSubmission;
-
-//# sourceMappingURL=formSubmission.model.js.map
+exports.default = FormSubmission;
