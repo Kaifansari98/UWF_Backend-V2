@@ -1,28 +1,53 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadUserProfile = exports.uploadAcknowledgement = exports.uploadFormData = void 0;
-const multer_1 = __importDefault(require("multer"));
-const path_1 = __importDefault(require("path"));
-const fs_1 = __importDefault(require("fs"));
-// Ensure upload folder exists for FormData
-const formDataPath = path_1.default.join(__dirname, '../../assets/FormData');
-if (!fs_1.default.existsSync(formDataPath)) {
-    fs_1.default.mkdirSync(formDataPath, { recursive: true });
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: Object.getOwnPropertyDescriptor(all, name).get
+    });
 }
-const formStorage = multer_1.default.diskStorage({
-    destination: (req, file, cb) => {
+_export(exports, {
+    get uploadAcknowledgement () {
+        return uploadAcknowledgement;
+    },
+    get uploadFormData () {
+        return uploadFormData;
+    },
+    get uploadFormFileReplacement () {
+        return uploadFormFileReplacement;
+    },
+    get uploadUserProfile () {
+        return uploadUserProfile;
+    }
+});
+const _multer = /*#__PURE__*/ _interop_require_default(require("multer"));
+const _path = /*#__PURE__*/ _interop_require_default(require("path"));
+const _fs = /*#__PURE__*/ _interop_require_default(require("fs"));
+function _interop_require_default(obj) {
+    return obj && obj.__esModule ? obj : {
+        default: obj
+    };
+}
+// Ensure upload folder exists for FormData
+const formDataPath = _path.default.join(__dirname, '../../assets/FormData');
+if (!_fs.default.existsSync(formDataPath)) {
+    _fs.default.mkdirSync(formDataPath, {
+        recursive: true
+    });
+}
+const formStorage = _multer.default.diskStorage({
+    destination: (req, file, cb)=>{
         console.log('✅ Destination confirmed for:', file.originalname);
         cb(null, formDataPath);
     },
-    filename: (req, file, cb) => {
+    filename: (req, file, cb)=>{
         let formId = req.params.formId;
         // Fallback for PUT routes like /submissions/edit/:formId
         if (!formId && req.originalUrl.includes('/submissions/edit/')) {
             const parts = req.originalUrl.split('/');
-            const index = parts.findIndex(part => part === 'edit');
+            const index = parts.findIndex((part)=>part === 'edit');
             if (index !== -1 && parts[index + 1]) {
                 formId = parts[index + 1];
             }
@@ -32,7 +57,7 @@ const formStorage = multer_1.default.diskStorage({
             return cb(new Error('Form ID not found in request'), '');
         }
         const suffix = file.fieldname;
-        const ext = path_1.default.extname(file.originalname);
+        const ext = _path.default.extname(file.originalname);
         const filename = `${formId}${suffix}${ext}`;
         console.log('📂 Uploading file:', {
             formId,
@@ -43,53 +68,100 @@ const formStorage = multer_1.default.diskStorage({
         cb(null, filename);
     }
 });
-exports.uploadFormData = (0, multer_1.default)({
+const uploadFormData = (0, _multer.default)({
     storage: formStorage,
-    fileFilter: (_req, file, cb) => {
+    fileFilter: (_req, file, cb)=>{
         if (file.mimetype === 'application/pdf') {
             cb(null, true);
-        }
-        else {
+        } else {
             cb(new Error('Only PDF files are allowed'));
+        }
+    }
+});
+// Replacing a single already-submitted FormData file (super admin re-upload).
+// Filename is derived from :formId + :field (not the multipart fieldname),
+// so the route can accept a single canonical field (e.g. "file") for any of
+// the replaceable columns.
+const REPLACEABLE_FORM_FIELDS = [
+    'feesStructure',
+    'marksheet',
+    'signature',
+    'parentApprovalLetter'
+];
+const formReplacementStorage = _multer.default.diskStorage({
+    destination: (_req, _file, cb)=>{
+        cb(null, formDataPath);
+    },
+    filename: (req, file, cb)=>{
+        const { formId, field } = req.params;
+        const ext = _path.default.extname(file.originalname);
+        cb(null, `${formId}${field}${ext}`);
+    }
+});
+const uploadFormFileReplacement = (0, _multer.default)({
+    storage: formReplacementStorage,
+    fileFilter: (req, file, cb)=>{
+        if (!REPLACEABLE_FORM_FIELDS.includes(req.params.field)) {
+            cb(new Error('Invalid field'));
+            return;
+        }
+        const allowedMimeTypes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp'
+        ];
+        if (allowedMimeTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only PDF or image files are allowed'));
         }
     }
 });
 // Separate middleware for user profile pictures
-const userDataPath = path_1.default.join(__dirname, '../../assets/UserData');
-if (!fs_1.default.existsSync(userDataPath)) {
-    fs_1.default.mkdirSync(userDataPath, { recursive: true });
+const userDataPath = _path.default.join(__dirname, '../../assets/UserData');
+if (!_fs.default.existsSync(userDataPath)) {
+    _fs.default.mkdirSync(userDataPath, {
+        recursive: true
+    });
 }
-const userStorage = multer_1.default.diskStorage({
-    destination: (_req, _file, cb) => {
+const userStorage = _multer.default.diskStorage({
+    destination: (_req, _file, cb)=>{
         cb(null, userDataPath);
     },
-    filename: (_req, file, cb) => {
+    filename: (_req, file, cb)=>{
         cb(null, file.originalname); // keep original name
     }
 });
-const acknowledgementPath = path_1.default.join(__dirname, '../../assets/Acknowledgment_Data');
-if (!fs_1.default.existsSync(acknowledgementPath)) {
-    fs_1.default.mkdirSync(acknowledgementPath, { recursive: true });
+const acknowledgementPath = _path.default.join(__dirname, '../../assets/Acknowledgment_Data');
+if (!_fs.default.existsSync(acknowledgementPath)) {
+    _fs.default.mkdirSync(acknowledgementPath, {
+        recursive: true
+    });
 }
-const acknowledgementStorage = multer_1.default.diskStorage({
-    destination: (_req, _file, cb) => {
+const acknowledgementStorage = _multer.default.diskStorage({
+    destination: (_req, _file, cb)=>{
         cb(null, acknowledgementPath);
     },
-    filename: (req, file, cb) => {
+    filename: (req, file, cb)=>{
         const { formId } = req.params;
-        const ext = path_1.default.extname(file.originalname);
+        const ext = _path.default.extname(file.originalname);
         cb(null, `${formId}Invoice${ext}`);
     }
 });
-exports.uploadAcknowledgement = (0, multer_1.default)({
+const uploadAcknowledgement = (0, _multer.default)({
     storage: acknowledgementStorage,
-    fileFilter: (_req, file, cb) => {
+    fileFilter: (_req, file, cb)=>{
         if (file.mimetype === 'application/pdf') {
             cb(null, true);
-        }
-        else {
+        } else {
             cb(new Error('Only PDF files are allowed'));
         }
     }
 });
-exports.uploadUserProfile = (0, multer_1.default)({ storage: userStorage });
+const uploadUserProfile = (0, _multer.default)({
+    storage: userStorage
+});
+
+//# sourceMappingURL=upload.middleware.js.map

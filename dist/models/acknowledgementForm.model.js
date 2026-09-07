@@ -1,50 +1,76 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const sequelize_1 = require("sequelize");
-const sequelize_2 = __importDefault(require("../database/sequelize"));
-class AcknowledgementForm extends sequelize_1.Model {
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function() {
+        return _default;
+    }
+});
+const _sequelize = require("sequelize");
+const _sequelize1 = /*#__PURE__*/ _interop_require_default(require("../database/sequelize"));
+function _define_property(obj, key, value) {
+    if (key in obj) {
+        Object.defineProperty(obj, key, {
+            value: value,
+            enumerable: true,
+            configurable: true,
+            writable: true
+        });
+    } else obj[key] = value;
+    return obj;
+}
+function _interop_require_default(obj) {
+    return obj && obj.__esModule ? obj : {
+        default: obj
+    };
+}
+class AcknowledgementForm extends _sequelize.Model {
+    constructor(...args){
+        super(...args), _define_property(this, "createdAt", void 0), _define_property(this, "updatedAt", void 0);
+    }
 }
 AcknowledgementForm.init({
     id: {
-        type: sequelize_1.DataTypes.INTEGER,
+        type: _sequelize.DataTypes.INTEGER,
         autoIncrement: true,
-        primaryKey: true,
+        primaryKey: true
     },
     formId: {
-        type: sequelize_1.DataTypes.STRING,
+        type: _sequelize.DataTypes.STRING,
         allowNull: false,
         references: {
             model: 'generated_forms',
-            key: 'formId',
+            key: 'formId'
         },
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE'
     },
     student_name: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: false,
+        type: _sequelize.DataTypes.STRING,
+        allowNull: false
     },
     form_link: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: false,
+        type: _sequelize.DataTypes.STRING,
+        allowNull: false
     },
     invoice: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: true,
+        type: _sequelize.DataTypes.STRING,
+        allowNull: true
     },
     status: {
-        type: sequelize_1.DataTypes.ENUM('pending', 'submitted', 'accepted'),
-        defaultValue: 'pending',
+        type: _sequelize.DataTypes.ENUM('pending', 'submitted', 'accepted'),
+        defaultValue: 'pending'
     },
     submitted_at: {
-        type: sequelize_1.DataTypes.DATE,
-        allowNull: true,
-    },
+        type: _sequelize.DataTypes.DATE,
+        allowNull: true
+    }
 }, {
-    sequelize: sequelize_2.default,
+    sequelize: _sequelize1.default,
     modelName: 'AcknowledgementForm',
-    tableName: 'acknowledgement_forms',
+    tableName: 'acknowledgement_forms'
 });
-exports.default = AcknowledgementForm;
+const _default = AcknowledgementForm;
+
+//# sourceMappingURL=acknowledgementForm.model.js.map
