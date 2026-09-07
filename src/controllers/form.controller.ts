@@ -2,23 +2,32 @@ import { Request, Response } from 'express';
 import GeneratedForm from '../models/generatedForm.model';
 import FormSubmission from '../models/formSubmission.model';
 import { AuthRequest } from '../middlewares/auth.middleware';
-import { Op, Sequelize } from 'sequelize';
+import { Op, Sequelize, Transaction } from 'sequelize';
+import sequelize from '../database/sequelize';
 import { getSingleParam } from '../utils/requestParams';
 
 const FRONTEND_URL = process.env.FRONTEND_URL?.trim() || 'http://localhost:3000';
 
-export const generateFormId = async (region: 'Jubail' | 'Dammam' | 'Maharashtra') => {
+export const generateFormId = async (
+  region: 'Jubail' | 'Dammam' | 'Maharashtra',
+  transaction?: Transaction
+) => {
   const regionInitial = region.charAt(0).toUpperCase();
   const currentYear = new Date().getFullYear();
+  const prefix = `${regionInitial}${currentYear}`;
 
-  // Find the max sequence for this region across all years
+  // Find the max sequence for this region+year. Lock the row (when inside a
+  // transaction) so concurrent requests can't read the same "latest" form
+  // before either has committed its INSERT.
   const latestForm = await GeneratedForm.findOne({
     where: {
       formId: {
-        [Op.like]: `${regionInitial}%`
+        [Op.like]: `${prefix}%`
       }
     },
-    order: [['created_on', 'DESC']]
+    order: [['formId', 'DESC']],
+    transaction,
+    lock: transaction ? transaction.LOCK.UPDATE : undefined
   });
 
   let nextSequence = 1;
@@ -32,7 +41,7 @@ export const generateFormId = async (region: 'Jubail' | 'Dammam' | 'Maharashtra'
   }
 
   // Now build new formId with current year and next sequence
-  const newFormId = `${regionInitial}${currentYear}${String(nextSequence).padStart(4, '0')}`;
+  const newFormId = `${prefix}${String(nextSequence).padStart(4, '0')}`;
   return newFormId;
 };
 
@@ -77,30 +86,52 @@ export const getAllGeneratedForms = async (_req: Request, res: Response): Promis
 };
 
 export const generateNewStudentForm = async (req: AuthRequest, res: Response) => {
-  try {
-    const user = req.user;
-    const { region, name } = req.body;
+  const user = req.user;
+  const { region, name } = req.body;
 
-    if (!region || !name) {
-      res.status(400).json({ message: 'Both name and region are required' });
+  if (!region || !name) {
+    res.status(400).json({ message: 'Both name and region are required' });
+    return;
+  }
+
+  const MAX_RETRIES = 5;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const form = await sequelize.transaction(async (t) => {
+        const formId = await generateFormId(region, t);
+        const form_link = `${FRONTEND_URL}/${formId}`;
+
+        return GeneratedForm.create(
+          {
+            formId,
+            region,
+            form_link,
+            creatorId: user.id,
+            creator_name: user.full_name,
+            student_name: name // ✅ Save name
+          },
+          { transaction: t }
+        );
+      });
+
+      res.status(201).json({ message: 'Form created for new student', form });
+      return;
+    } catch (err: any) {
+      // Two requests can still both find "no existing row" (nothing to lock)
+      // and race to insert sequence 1 for a brand new region/year. Retry a
+      // few times on that specific conflict instead of failing the request.
+      const isDuplicateFormId =
+        err?.name === 'SequelizeUniqueConstraintError' &&
+        err?.fields?.formId !== undefined;
+
+      if (isDuplicateFormId && attempt < MAX_RETRIES) {
+        continue;
+      }
+
+      res.status(500).json({ message: 'Failed to create form', error: err });
       return;
     }
-
-    const formId = await generateFormId(region);
-    const form_link = `${FRONTEND_URL}/${formId}`;
-
-    const form = await GeneratedForm.create({
-      formId,
-      region,
-      form_link,
-      creatorId: user.id,
-      creator_name: user.full_name,
-      student_name: name // ✅ Save name
-    });
-
-    res.status(201).json({ message: 'Form created for new student', form });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to create form', error: err });
   }
 };
 
