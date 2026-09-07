@@ -35,8 +35,11 @@ export const generateFormId = async (
     },
     order: [[Sequelize.literal(`CAST(RIGHT("formId", 4) AS INTEGER)`), 'DESC']],
     transaction,
-    lock: transaction ? transaction.LOCK.UPDATE : undefined
+    lock: transaction ? transaction.LOCK.UPDATE : undefined,
+    logging: (sql: string) => console.log('[generateFormId DEBUG]', sql)
   });
+
+  console.log('[generateFormId DEBUG] regionInitial=', regionInitial, 'latestForm=', latestForm?.formId ?? null);
 
   let nextSequence = 1;
 
