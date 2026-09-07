@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon",
     "typecheck": "tsc --noEmit",
-    "build": "npm run typecheck && swc src -d dist --source-maps",
+    "build": "npm run typecheck && swc src -d dist --source-maps --strip-leading-paths",
     "start": "node dist/index.js",
     "test": "ts-node src/index.ts",
     "sequelize": "sequelize-cli",
